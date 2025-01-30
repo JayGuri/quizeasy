@@ -1,7 +1,7 @@
+import Link from "next/link"
 import { ThemeProvider } from "../components/theme-provider"
 import { ThemeToggle } from "../components/theme-toggle"
 import type React from "react"
-import Link from "next/link"
 import "./globals.css"
 
 export const metadata = {
@@ -28,9 +28,9 @@ export default function RootLayout({
                 </div>
                 <nav className="flex items-center space-x-6 text-sm font-medium">
                   <Link href="/">Home</Link>
-                  <Link href="#about">About</Link>
-                  <Link href="#quizzes">Quizzes</Link>
-                  <Link href="#contact">Contact</Link>
+                  <Link href="/#about">About</Link>
+                  <Link href="/#quizzes">Quizzes</Link>
+                  <Link href="/#contact">Contact</Link>
                 </nav>
                 <div className="flex flex-1 items-center justify-end space-x-4">
                   <ThemeToggle />
@@ -49,7 +49,7 @@ export default function RootLayout({
             <footer className="border-t py-6 md:py-0">
               <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
                 <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-                  Built with accessibility in mind. Contact us at quizzeasyy@gmail.com
+                  Built with accessibility in mind. Contact us at support@quizeasy.com
                 </p>
               </div>
             </footer>
