@@ -25,7 +25,24 @@ const questions = [
     options: ["Mitochondria", "Chloroplast", "Nucleus", "Golgi apparatus"],
     correct: 1,
   },
-  // Add more questions here...
+  {
+    id: 3,
+    question: "What is the main product of photosynthesis?",
+    options: ["Oxygen", "Carbon dioxide", "Glucose", "Water"],
+    correct: 2,
+  },
+  {
+    id: 4,
+    question: "Which of the following is NOT required for photosynthesis?",
+    options: ["Light", "Water", "Carbon dioxide", "Nitrogen"],
+    correct: 3,
+  },
+  {
+    id: 5,
+    question: "In which part of the plant does photosynthesis primarily occur?",
+    options: ["Roots", "Stems", "Leaves", "Flowers"],
+    correct: 2,
+  },
 ]
 
 export default function QuizPage() {
@@ -72,7 +89,7 @@ export default function QuizPage() {
       { name: "Correct", value: score },
       { name: "Incorrect", value: 100 - score },
     ]
-    const COLORS = ["var(--cbSafe-success)", "var(--cbSafe-error)"]
+    const COLORS = ["var(--primary)", "var(--muted)"]
 
     return (
       <div className="container max-w-4xl py-12">
@@ -99,9 +116,7 @@ export default function QuizPage() {
                   <div
                     key={q.id}
                     className={`p-4 rounded-lg ${
-                      answers[index] === q.correct
-                        ? "bg-cbSafe-success/10 border-cbSafe-success"
-                        : "bg-cbSafe-error/10 border-cbSafe-error"
+                      answers[index] === q.correct ? "bg-primary/10 border-primary" : "bg-muted/50 border-muted"
                     }`}
                   >
                     <p className="font-medium">{q.question}</p>

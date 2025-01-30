@@ -21,7 +21,7 @@ export default function Home() {
               accessibility in mind
             </p>
             <Link
-              href="/quiz"
+              href="/quiz-options"
               className="bg-primary hover:bg-primary/90 inline-flex h-12 items-center justify-center rounded-full px-8 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               Get Started
@@ -112,7 +112,7 @@ export default function Home() {
                   <h3 className="text-lg font-semibold">Email Us</h3>
                   <p className="text-muted-foreground">quizzeasyy@gmail.com</p>
                   <Button variant="outline" asChild>
-                    <a href="mailto:quizzeasyy@gmail.com">Send Email</a>
+                    <a href="mailto:quizzeasyy@gmail.com<">Send Email</a>
                   </Button>
                 </CardContent>
               </Card>
