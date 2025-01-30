@@ -4,8 +4,9 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import { PerformanceAnalysis } from "../../components/performance-analysis"
+import { useTheme } from "next-themes"
 
 // Sample questions about photosynthesis
 const questions = [
@@ -53,6 +54,7 @@ export default function QuizPage() {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [startTime, setStartTime] = useState<number | null>(null)
   const [endTime, setEndTime] = useState<number | null>(null)
+  const { theme } = useTheme()
 
   useEffect(() => {
     setStartTime(Date.now())
@@ -93,12 +95,27 @@ export default function QuizPage() {
 
   if (showResults) {
     const score = calculateScore()
+    const correctAnswers = score
+    const incorrectAnswers = questions.length - score
     const data = [
-      { name: "Correct", value: score },
-      { name: "Incorrect", value: questions.length - score },
+      { name: "Correct", value: correctAnswers },
+      { name: "Incorrect", value: incorrectAnswers },
     ]
-    const COLORS = ["var(--primary)", "var(--muted)"]
+    const COLORS = ["hsl(var(--primary))", theme === "dark" ? "hsl(var(--background))" : "hsl(var(--foreground))"]
     const timeSpent = endTime && startTime ? (endTime - startTime) / 1000 : 0
+
+    const CustomTooltip = ({ active, payload }: any) => {
+      if (active && payload && payload.length) {
+        const data = payload[0].payload
+        return (
+          <div className="bg-background p-2 border rounded shadow">
+            <p className="font-semibold">{`${data.name}: ${data.value}`}</p>
+            <p>{`${((data.value / questions.length) * 100).toFixed(1)}%`}</p>
+          </div>
+        )
+      }
+      return null
+    }
 
     return (
       <div className="container max-w-4xl py-12">
@@ -112,9 +129,10 @@ export default function QuizPage() {
                 <PieChart>
                   <Pie data={data} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value">
                     {data.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="hsl(var(--border))" />
                     ))}
                   </Pie>
+                  <Tooltip content={<CustomTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
