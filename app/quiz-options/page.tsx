@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { LoadingSpinner } from "../../components/loading-spinner"
@@ -11,6 +11,8 @@ import { LoadingSpinner } from "../../components/loading-spinner"
 export default function QuizOptionsPage() {
   const [file, setFile] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [numQuestions, setNumQuestions] = useState(10)
+  const [topic, setTopic] = useState("")
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -55,11 +57,38 @@ export default function QuizOptionsPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit}>
-              <Label htmlFor="pdf-upload">Upload PDF</Label>
-              <Input id="pdf-upload" type="file" accept=".pdf" className="mt-2" onChange={handleFileChange} />
-              <Button type="submit" className="w-full mt-4" disabled={!file || isLoading}>
-                {isLoading ? "Processing..." : "Generate Quiz"}
-              </Button>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="pdf-upload">Upload PDF</Label>
+                  <Input id="pdf-upload" type="file" accept=".pdf" className="mt-2" onChange={handleFileChange} />
+                </div>
+                <div>
+                  <Label htmlFor="num-questions">Number of Questions</Label>
+                  <Input
+                    id="num-questions"
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={numQuestions}
+                    onChange={(e) => setNumQuestions(Number.parseInt(e.target.value))}
+                    className="mt-2"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="topic">Specific Topic (optional)</Label>
+                  <Input
+                    id="topic"
+                    type="text"
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    placeholder="Enter a specific topic"
+                    className="mt-2"
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={!file || isLoading}>
+                  {isLoading ? "Processing..." : "Generate Quiz"}
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>
