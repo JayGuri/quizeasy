@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
+import { PerformanceAnalysis } from "../../components/performance-analysis"
 
 // Sample questions about photosynthesis
 const questions = [
@@ -50,6 +51,12 @@ export default function QuizPage() {
   const [answers, setAnswers] = useState<number[]>([])
   const [showResults, setShowResults] = useState(false)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
+  const [startTime, setStartTime] = useState<number | null>(null)
+  const [endTime, setEndTime] = useState<number | null>(null)
+
+  useEffect(() => {
+    setStartTime(Date.now())
+  }, [])
 
   const handleAnswer = (answerIndex: number) => {
     setSelectedAnswer(answerIndex)
@@ -62,6 +69,7 @@ export default function QuizPage() {
       if (currentQuestion < questions.length - 1) {
         setCurrentQuestion(currentQuestion + 1)
       } else {
+        setEndTime(Date.now())
         setShowResults(true)
       }
     }
@@ -80,16 +88,17 @@ export default function QuizPage() {
     answers.forEach((answer, index) => {
       if (answer === questions[index].correct) correct++
     })
-    return (correct / questions.length) * 100
+    return correct
   }
 
   if (showResults) {
     const score = calculateScore()
     const data = [
       { name: "Correct", value: score },
-      { name: "Incorrect", value: 100 - score },
+      { name: "Incorrect", value: questions.length - score },
     ]
     const COLORS = ["var(--primary)", "var(--muted)"]
+    const timeSpent = endTime && startTime ? (endTime - startTime) / 1000 : 0
 
     return (
       <div className="container max-w-4xl py-12">
@@ -110,7 +119,7 @@ export default function QuizPage() {
               </ResponsiveContainer>
             </div>
             <div className="space-y-4">
-              <h3 className="text-2xl font-bold">Your Score: {score.toFixed(1)}%</h3>
+              <h3 className="text-2xl font-bold">Your Score: {((score / questions.length) * 100).toFixed(1)}%</h3>
               <div className="space-y-2">
                 {questions.map((q, index) => (
                   <div
@@ -126,6 +135,7 @@ export default function QuizPage() {
                 ))}
               </div>
             </div>
+            <PerformanceAnalysis score={score} totalQuestions={questions.length} timeSpent={timeSpent} />
           </CardContent>
         </Card>
       </div>

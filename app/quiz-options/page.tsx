@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { LoadingSpinner } from "../../components/loading-spinner"
+import { PDFPreview } from "../../components/pdf-preview"
 
 export default function QuizOptionsPage() {
   const [file, setFile] = useState<File | null>(null)
@@ -62,6 +63,7 @@ export default function QuizOptionsPage() {
                   <Label htmlFor="pdf-upload">Upload PDF</Label>
                   <Input id="pdf-upload" type="file" accept=".pdf" className="mt-2" onChange={handleFileChange} />
                 </div>
+                {file && <PDFPreview file={file} />}
                 <div>
                   <Label htmlFor="num-questions">Number of Questions</Label>
                   <Input
