@@ -1,26 +1,28 @@
 import { Card, CardContent } from "@/components/ui/card"
-import { Brain, Lock, Search, Sparkles } from "lucide-react"
+import { Brain, Lock, Search, Sparkles, Mail, Phone, Clock } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-r from-primary to-secondary">
+      <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 text-center">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tighter text-white sm:text-4xl md:text-5xl lg:text-6xl/none">
-                Discover the Power of Learning
-              </h1>
-              <p className="mx-auto max-w-[700px] text-white md:text-xl">
-                Welcome to QuizEasy, where we transform the way you acquire knowledge. Designed with accessibility in
-                mind for everyone.
-              </p>
-            </div>
+            <p className="subtitle">Explore our Quizzing Platform</p>
+            <h1 className="hero-heading">
+              Discover the
+              <br />
+              Power of Learning
+            </h1>
+            <p className="subtitle max-w-[700px]">
+              Welcome to our Quizzing Platform, where we transform the way you acquire knowledge. Designed with
+              accessibility in mind
+            </p>
             <Link
               href="/quiz"
-              className="inline-flex h-10 items-center justify-center rounded-md bg-white px-8 text-sm font-medium text-primary shadow transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
+              className="bg-primary hover:bg-primary/90 inline-flex h-12 items-center justify-center rounded-full px-8 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               Get Started
             </Link>
@@ -29,7 +31,7 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32" id="about">
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-muted/50" id="about">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
@@ -41,18 +43,22 @@ export default function Home() {
             </div>
           </div>
           <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-2 lg:gap-12">
-            <Card className="transform transition-all hover:scale-105">
+            <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
               <CardContent className="flex flex-col items-center space-y-4 p-6">
-                <Brain className="h-12 w-12 text-primary" />
+                <div className="rounded-full bg-primary/10 p-3">
+                  <Brain className="h-12 w-12 text-primary" />
+                </div>
                 <h3 className="text-xl font-bold">Unlock Your Potential</h3>
                 <p className="text-muted-foreground text-center">
                   By providing personalized feedback and adjusting the difficulty based on your performance
                 </p>
               </CardContent>
             </Card>
-            <Card className="transform transition-all hover:scale-105">
+            <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
               <CardContent className="flex flex-col items-center space-y-4 p-6">
-                <Lock className="h-12 w-12 text-primary" />
+                <div className="rounded-full bg-primary/10 p-3">
+                  <Lock className="h-12 w-12 text-primary" />
+                </div>
                 <h3 className="text-xl font-bold">Inclusive Design</h3>
                 <p className="text-muted-foreground text-center">
                   Our platform is designed with accessibility in mind, ensuring that individuals with diverse needs can
@@ -60,9 +66,11 @@ export default function Home() {
                 </p>
               </CardContent>
             </Card>
-            <Card className="transform transition-all hover:scale-105">
+            <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
               <CardContent className="flex flex-col items-center space-y-4 p-6">
-                <Search className="h-12 w-12 text-primary" />
+                <div className="rounded-full bg-primary/10 p-3">
+                  <Search className="h-12 w-12 text-primary" />
+                </div>
                 <h3 className="text-xl font-bold">Seamless Exploration</h3>
                 <p className="text-muted-foreground text-center">
                   Navigating our platform is a breeze, allowing you to effortlessly access the resources and tools you
@@ -70,9 +78,11 @@ export default function Home() {
                 </p>
               </CardContent>
             </Card>
-            <Card className="transform transition-all hover:scale-105">
+            <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
               <CardContent className="flex flex-col items-center space-y-4 p-6">
-                <Sparkles className="h-12 w-12 text-primary" />
+                <div className="rounded-full bg-primary/10 p-3">
+                  <Sparkles className="h-12 w-12 text-primary" />
+                </div>
                 <h3 className="text-xl font-bold">Comprehensive Support</h3>
                 <p className="text-muted-foreground text-center">
                   Our platform offers a comprehensive suite of features and support to enhance your learning experience
@@ -84,7 +94,7 @@ export default function Home() {
       </section>
 
       {/* Contact Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-muted" id="contact">
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-background to-muted" id="contact">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
@@ -93,12 +103,41 @@ export default function Home() {
                 Get in touch with our team for support or inquiries
               </p>
             </div>
-            <div className="mx-auto w-full max-w-sm space-y-4">
-              <div className="space-y-2 text-left">
-                <p>Email: support@quizeasy.com</p>
-                <p>Phone: +1 (555) 123-4567</p>
-                <p>Hours: Monday - Friday, 9AM - 5PM EST</p>
-              </div>
+            <div className="mx-auto w-full max-w-4xl grid gap-8 md:grid-cols-3 mt-8">
+              <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
+                <CardContent className="flex flex-col items-center space-y-4 p-6">
+                  <div className="rounded-full bg-primary/10 p-3">
+                    <Mail className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-semibold">Email Us</h3>
+                  <p className="text-muted-foreground">quizzeasyy@gmail.com</p>
+                  <Button variant="outline" asChild>
+                    <a href="mailto:quizzeasyy@gmail.com">Send Email</a>
+                  </Button>
+                </CardContent>
+              </Card>
+              <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
+                <CardContent className="flex flex-col items-center space-y-4 p-6">
+                  <div className="rounded-full bg-primary/10 p-3">
+                    <Phone className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-semibold">Call Us</h3>
+                  <p className="text-muted-foreground">+91 8879854245</p>
+                  <Button variant="outline" asChild>
+                    <a href="tel:+15551234567">Call Now</a>
+                  </Button>
+                </CardContent>
+              </Card>
+              <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
+                <CardContent className="flex flex-col items-center space-y-4 p-6">
+                  <div className="rounded-full bg-primary/10 p-3">
+                    <Clock className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-semibold">Business Hours</h3>
+                  <p className="text-muted-foreground">Monday - Friday</p>
+                  <p className="text-muted-foreground">9AM - 5PM IST</p>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
