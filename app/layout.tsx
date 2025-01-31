@@ -29,14 +29,15 @@ export default function RootLayout({
                 <nav className="flex items-center space-x-6 text-sm font-medium">
                   <Link href="/">Home</Link>
                   <Link href="/#about">About</Link>
-                  <Link href="/#quizzes">Quizzes</Link>
+                  <Link href="/quiz-options">Quizzes</Link>
+                  <Link href="/flashcards">Flashcards</Link>
                   <Link href="/#contact">Contact</Link>
                 </nav>
                 <div className="flex flex-1 items-center justify-end space-x-4">
                   <ThemeToggle />
                   <nav className="flex items-center space-x-2">
                     <Link
-                      href="/quiz"
+                      href="/quiz-options"
                       className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
                     >
                       Get Started
