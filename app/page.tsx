@@ -43,48 +43,55 @@ export default function Home() {
             </div>
           </div>
           <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-2 lg:gap-12">
-            <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
-              <CardContent className="flex flex-col items-center space-y-4 p-6">
-                <div className="rounded-full bg-primary/10 p-3">
-                  <Brain className="h-12 w-12 text-primary" />
+            {/* Unlock Your Potential (Green on hover) */}
+            <Card className="transform transition-all hover:scale-105 hover:shadow-lg group">
+              <CardContent className="flex flex-col items-center space-y-4 p-6 transition-all group-hover:bg-[#34b98a]">
+                <div className="rounded-full bg-primary/10 p-3 transition-all group-hover:bg-white/10">
+                  <Brain className="h-12 w-12 text-primary group-hover:text-white" />
                 </div>
-                <h3 className="text-xl font-bold">Unlock Your Potential</h3>
-                <p className="text-muted-foreground text-center">
+                <h3 className="text-xl font-bold group-hover:text-white">Unlock Your Potential</h3>
+                <p className="text-muted-foreground text-center group-hover:text-white">
                   By providing personalized feedback and adjusting the difficulty based on your performance
                 </p>
               </CardContent>
             </Card>
-            <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
-              <CardContent className="flex flex-col items-center space-y-4 p-6">
-                <div className="rounded-full bg-primary/10 p-3">
-                  <Lock className="h-12 w-12 text-primary" />
+
+            {/* Inclusive Design (Yellow on hover) */}
+            <Card className="transform transition-all hover:scale-105 hover:shadow-lg group">
+              <CardContent className="flex flex-col items-center space-y-4 p-6 transition-all group-hover:bg-[#FACC15]">
+                <div className="rounded-full bg-primary/10 p-3 transition-all group-hover:bg-black/10">
+                  <Lock className="h-12 w-12 text-primary group-hover:text-black" />
                 </div>
-                <h3 className="text-xl font-bold">Inclusive Design</h3>
-                <p className="text-muted-foreground text-center">
+                <h3 className="text-xl font-bold group-hover:text-black">Inclusive Design</h3>
+                <p className="text-muted-foreground text-center group-hover:text-black">
                   Our platform is designed with accessibility in mind, ensuring that individuals with diverse needs can
                   fully engage
                 </p>
               </CardContent>
             </Card>
-            <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
-              <CardContent className="flex flex-col items-center space-y-4 p-6">
-                <div className="rounded-full bg-primary/10 p-3">
-                  <Search className="h-12 w-12 text-primary" />
+
+            {/* Seamless Exploration (Green on hover) */}
+            <Card className="transform transition-all hover:scale-105 hover:shadow-lg group">
+              <CardContent className="flex flex-col items-center space-y-4 p-6 transition-all group-hover:bg-[#34b98a]">
+                <div className="rounded-full bg-primary/10 p-3 transition-all group-hover:bg-white/10">
+                  <Search className="h-12 w-12 text-primary group-hover:text-white" />
                 </div>
-                <h3 className="text-xl font-bold">Seamless Exploration</h3>
-                <p className="text-muted-foreground text-center">
+                <h3 className="text-xl font-bold group-hover:text-white">Seamless Exploration</h3>
+                <p className="text-muted-foreground text-center group-hover:text-white">
                   Navigating our platform is a breeze, allowing you to effortlessly access the resources and tools you
                   need
                 </p>
               </CardContent>
             </Card>
-            <Card className="transform transition-all hover:scale-105 hover:shadow-lg">
-              <CardContent className="flex flex-col items-center space-y-4 p-6">
-                <div className="rounded-full bg-primary/10 p-3">
-                  <Sparkles className="h-12 w-12 text-primary" />
+
+            {/* Comprehensive Support (Yellow on hover) */}
+            <Card className="transform transition-all hover:scale-105 hover:shadow-lg group">
+              <CardContent className="flex flex-col items-center space-y-4 p-6 transition-all group-hover:bg-[#FACC15]">
+                <div className="rounded-full bg-primary/10 p-3 transition-all group-hover:bg-black/10">
+                  <Sparkles className="h-12 w-12 text-primary group-hover:text-black" />
                 </div>
-                <h3 className="text-xl font-bold">Comprehensive Support</h3>
-                <p className="text-muted-foreground text-center">
+                <h3 className="text-xl font-bold group-hover:text-black">Comprehensive Support</h3>
+                <p className="text-muted-foreground text-center group-hover:text-black">
                   Our platform offers a comprehensive suite of features and support to enhance your learning experience
                 </p>
               </CardContent>
