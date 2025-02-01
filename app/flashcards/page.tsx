@@ -39,7 +39,12 @@ const ScrollIndicator = () => (
   </div>
 )
 
-const MotionDiv = motion.div as React.ComponentType<HTMLMotionProps<"div">>
+type MotionDivProps = HTMLMotionProps<"div"> & {
+  className?: string
+  onClick?: () => void
+}
+
+const MotionDiv = motion.div as React.ComponentType<MotionDivProps>
 
 export default function FlashcardsPage() {
   const [currentCard, setCurrentCard] = useState(0)
@@ -50,7 +55,7 @@ export default function FlashcardsPage() {
   useEffect(() => {
     setIsFlipped(false)
     checkOverflow()
-  }, [isFlipped]) //Corrected dependency
+  }, [currentCard])
 
   const checkOverflow = () => {
     if (contentRef.current) {
