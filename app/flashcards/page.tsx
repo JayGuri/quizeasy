@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, type HTMLMotionProps } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, RotateCcw, ChevronDown } from "lucide-react"
@@ -39,7 +39,7 @@ const ScrollIndicator = () => (
   </div>
 )
 
-const MotionDiv = motion.div
+const MotionDiv = motion.div as React.ComponentType<HTMLMotionProps<"div">>
 
 export default function FlashcardsPage() {
   const [currentCard, setCurrentCard] = useState(0)
