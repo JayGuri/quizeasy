@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
@@ -8,6 +9,7 @@ import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { RadioGroup, RadioGroupItem } from "../../components/ui/radio-group"
 import { LoadingSpinner } from "../../components/loading-spinner"
+import { generateContent } from "../../services/api"
 
 export default function QuizOptionsPage() {
   const [file, setFile] = useState<File | null>(null)
@@ -15,6 +17,7 @@ export default function QuizOptionsPage() {
   const [numItems, setNumItems] = useState(10)
   const [topic, setTopic] = useState("")
   const [mode, setMode] = useState<"quiz" | "flashcard">("quiz")
+  const router = useRouter()
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -22,16 +25,21 @@ export default function QuizOptionsPage() {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (file) {
       setIsLoading(true)
-      // Simulate processing time
-      setTimeout(() => {
+      try {
+        const data = await generateContent(file, mode, numItems, topic)
+        // Store the received data in localStorage or a global state management solution
+        localStorage.setItem("generatedContent", JSON.stringify(data))
+        router.push(mode === "quiz" ? "/quiz" : "/flashcards")
+      } catch (error) {
+        console.error("Error generating content:", error)
+        // Handle error (e.g., show error message to user)
+      } finally {
         setIsLoading(false)
-        // Redirect to the appropriate page based on the selected mode
-        window.location.href = mode === "quiz" ? "/quiz" : "/flashcards"
-      }, 3000)
+      }
     }
   }
 
@@ -87,7 +95,7 @@ export default function QuizOptionsPage() {
                     min="1"
                     max="50"
                     value={numItems}
-                    onChange={(e) => setNumItems(Number.parseInt(e.target.value))}
+                    onChange={(e) => setNumItems(Number(e.target.value))}
                     className="mt-2"
                   />
                 </div>
