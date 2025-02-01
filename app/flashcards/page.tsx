@@ -35,16 +35,14 @@ export default function FlashcardsPage() {
 
   useEffect(() => {
     setIsFlipped(false)
-  }, [currentCard])
+  }, [])
 
   const nextCard = () => {
     setCurrentCard((prev) => (prev + 1) % flashcardsData.length)
-    setIsFlipped(false)
   }
 
   const prevCard = () => {
     setCurrentCard((prev) => (prev - 1 + flashcardsData.length) % flashcardsData.length)
-    setIsFlipped(false)
   }
 
   const resetCards = () => {
@@ -63,27 +61,28 @@ export default function FlashcardsPage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
             transition={{ duration: 0.3 }}
-            className="w-full max-w-2xl perspective-1000"
           >
-            <Card className="w-full h-64">
-              <CardContent className="p-0 h-full">
-                <motion.div
-                  className="w-full h-full relative"
-                  initial={false}
-                  animate={{ rotateY: isFlipped ? 180 : 0 }}
-                  transition={{ duration: 0.6 }}
-                  style={{ transformStyle: "preserve-3d" }}
-                  onClick={() => setIsFlipped(!isFlipped)}
-                >
-                  <div className="absolute w-full h-full backface-hidden flex items-center justify-center p-6 text-center">
-                    <p className="text-xl">{flashcardsData[currentCard].front}</p>
-                  </div>
-                  <div className="absolute w-full h-full backface-hidden rotate-y-180 flex items-center justify-center p-6 text-center bg-primary text-primary-foreground rounded-lg">
-                    <p>{flashcardsData[currentCard].back}</p>
-                  </div>
-                </motion.div>
-              </CardContent>
-            </Card>
+            <div className="w-full max-w-2xl perspective-1000">
+              <Card className="w-full h-64">
+                <CardContent className="p-0 h-full">
+                  <motion.div
+                    className="w-full h-full relative"
+                    initial={false}
+                    animate={{ rotateY: isFlipped ? 180 : 0 }}
+                    transition={{ duration: 0.6 }}
+                    style={{ transformStyle: "preserve-3d" }}
+                    onClick={() => setIsFlipped(!isFlipped)}
+                  >
+                    <div className="absolute w-full h-full backface-hidden flex items-center justify-center p-6 text-center">
+                      <p className="text-xl">{flashcardsData[currentCard].front}</p>
+                    </div>
+                    <div className="absolute w-full h-full backface-hidden rotate-y-180 flex items-center justify-center p-6 text-center bg-primary text-primary-foreground rounded-lg">
+                      <p>{flashcardsData[currentCard].back}</p>
+                    </div>
+                  </motion.div>
+                </CardContent>
+              </Card>
+            </div>
           </motion.div>
         </AnimatePresence>
         <div className="flex justify-between items-center w-full max-w-2xl mt-6">
