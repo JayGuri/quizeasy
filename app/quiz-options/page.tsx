@@ -45,7 +45,9 @@ export default function QuizOptionsPage() {
 
   return (
     <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold text-center mb-10">Choose Your Learning Experience</h1>
+      <h1 className="text-4xl md:text-5xl font-extrabold text-center mb-10 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80">
+        Choose Your Learning Experience
+      </h1>
       <div className="grid md:grid-cols-2 gap-6">
         <Card className="w-full">
           <CardHeader>

@@ -30,6 +30,17 @@ export default function Home() {
         </div>
       </section>
 
+            {/* Illustration Section */}
+            <section className="w-full relative -mb-20">
+        <div className="container px-4 md:px-6">
+          <img
+            src="/illustration.png"
+            alt="Learning Platform Illustration"
+            className="w-full h-auto object-cover rounded-lg shadow-lg"
+          />
+        </div>
+      </section>
+
       {/* Features Section */}
       <section id="about" className="w-full py-12 md:py-24 lg:py-32 bg-muted/50">
         <div className="container px-4 md:px-6">
