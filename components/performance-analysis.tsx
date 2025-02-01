@@ -5,9 +5,10 @@ interface PerformanceAnalysisProps {
   score: number
   totalQuestions: number
   timeSpent: number
+  questionTimes?: number[]
 }
 
-export function PerformanceAnalysis({ score, totalQuestions, timeSpent }: PerformanceAnalysisProps) {
+export function PerformanceAnalysis({ score, totalQuestions, timeSpent, questionTimes }: PerformanceAnalysisProps) {
   const percentageScore = (score / totalQuestions) * 100
   const averageTimePerQuestion = timeSpent / totalQuestions
 
@@ -26,11 +27,21 @@ export function PerformanceAnalysis({ score, totalQuestions, timeSpent }: Perfor
         </div>
         <div>
           <h3 className="text-lg font-semibold">Time Spent</h3>
-          <p className="text-sm text-muted-foreground">Total time: {timeSpent.toFixed(1)} seconds</p>
+          <p className="text-sm text-muted-foreground">Total time: {timeSpent.toFixed(2)} seconds</p>
           <p className="text-sm text-muted-foreground">
-            Average time per question: {averageTimePerQuestion.toFixed(1)} seconds
+            Average time per question: {averageTimePerQuestion.toFixed(2)} seconds
           </p>
         </div>
+        {questionTimes && questionTimes.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold">Time per Question</h3>
+            {questionTimes.map((time, index) => (
+              <p key={index} className="text-sm text-muted-foreground">
+                Question {index + 1}: {time.toFixed(2)} seconds
+              </p>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   )
