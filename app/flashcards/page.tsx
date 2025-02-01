@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -33,25 +33,23 @@ export default function FlashcardsPage() {
   const [currentCard, setCurrentCard] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
 
-  const nextCard = () => {
+  useEffect(() => {
     setIsFlipped(false)
-    setTimeout(() => {
-      setCurrentCard((prev) => (prev + 1) % flashcardsData.length)
-    }, 200)
+  }, [currentCard])
+
+  const nextCard = () => {
+    setCurrentCard((prev) => (prev + 1) % flashcardsData.length)
+    setIsFlipped(false)
   }
 
   const prevCard = () => {
+    setCurrentCard((prev) => (prev - 1 + flashcardsData.length) % flashcardsData.length)
     setIsFlipped(false)
-    setTimeout(() => {
-      setCurrentCard((prev) => (prev - 1 + flashcardsData.length) % flashcardsData.length)
-    }, 200)
   }
 
   const resetCards = () => {
+    setCurrentCard(0)
     setIsFlipped(false)
-    setTimeout(() => {
-      setCurrentCard(0)
-    }, 200)
   }
 
   return (
@@ -67,12 +65,14 @@ export default function FlashcardsPage() {
             transition={{ duration: 0.3 }}
             className="w-full max-w-2xl perspective-1000"
           >
-            <Card className="w-full h-64 cursor-pointer">
+            <Card className="w-full h-64">
               <CardContent className="p-0 h-full">
                 <motion.div
-                  className="w-full h-full"
+                  className="w-full h-full relative"
+                  initial={false}
                   animate={{ rotateY: isFlipped ? 180 : 0 }}
                   transition={{ duration: 0.6 }}
+                  style={{ transformStyle: "preserve-3d" }}
                   onClick={() => setIsFlipped(!isFlipped)}
                 >
                   <div className="absolute w-full h-full backface-hidden flex items-center justify-center p-6 text-center">
