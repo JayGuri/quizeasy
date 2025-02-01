@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Input } from "../../components/ui/input"
@@ -16,7 +15,7 @@ export default function QuizOptionsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [numItems, setNumItems] = useState(10)
   const [topic, setTopic] = useState("")
-  const [mode, setMode] = useState<"quiz" | "flashcard">("quiz")
+  const [mode, setMode] = useState<"flashcard" | "quiz">("quiz")
   const router = useRouter()
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,7 +30,7 @@ export default function QuizOptionsPage() {
       setIsLoading(true)
       try {
         const data = await generateContent(file, mode, numItems, topic)
-        // Store the received data in localStorage or a global state management solution
+        // Store the received data in localStorage
         localStorage.setItem("generatedContent", JSON.stringify(data))
         router.push(mode === "quiz" ? "/quiz" : "/flashcards")
       } catch (error) {
@@ -43,6 +42,11 @@ export default function QuizOptionsPage() {
     }
   }
 
+  const handleDemoClick = (demoMode: "quiz" | "flashcard") => {
+    localStorage.setItem("contentMode", "demo")
+    router.push(demoMode === "quiz" ? "/quiz" : "/flashcards")
+  }
+
   return (
     <div className="container mx-auto py-10">
       <h1 className="text-4xl md:text-5xl font-extrabold text-center mb-10 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80">
@@ -51,19 +55,17 @@ export default function QuizOptionsPage() {
       <div className="grid md:grid-cols-2 gap-6">
         <Card className="w-full">
           <CardHeader>
-            <CardTitle>Try an Example</CardTitle>
+            <CardTitle>Try a Demo</CardTitle>
             <CardDescription>Experience our format with a sample on Photosynthesis</CardDescription>
           </CardHeader>
           <CardContent>
             <p>This contains information about the process of photosynthesis in plants.</p>
           </CardContent>
           <CardFooter className="flex gap-4">
-            <Link href="/quiz" passHref>
-              <Button>Start Quiz</Button>
-            </Link>
-            <Link href="/flashcards" passHref>
-              <Button variant="outline">View Flashcards</Button>
-            </Link>
+            <Button onClick={() => handleDemoClick("quiz")}>Start Demo Quiz</Button>
+            <Button variant="outline" onClick={() => handleDemoClick("flashcard")}>
+              View Demo Flashcards
+            </Button>
           </CardFooter>
         </Card>
 

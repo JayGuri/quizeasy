@@ -1,26 +1,28 @@
-interface QuizData {
-    questions: {
-      id: number
-      question: string
-      options: string[]
-      correct: number
-    }[]
+// Define types for our API responses
+interface FlashcardData {
+    id: number
+    front: string
+    back: string
   }
   
-  interface FlashcardData {
-    flashcards: {
-      id: number
-      front: string
-      back: string
-    }[]
+  interface QuizQuestion {
+    id: number
+    question: string
+    options: string[]
+    correctAnswer: number
+  }
+  
+  interface GenerateContentResponse {
+    type: "flashcard" | "quiz"
+    content: FlashcardData[] | QuizQuestion
   }
   
   export async function generateContent(
     file: File,
-    mode: "quiz" | "flashcard",
+    mode: "flashcard" | "quiz",
     numItems: number,
     topic?: string,
-  ): Promise<QuizData | FlashcardData> {
+  ): Promise<GenerateContentResponse> {
     const formData = new FormData()
     formData.append("file", file)
     formData.append("mode", mode)
@@ -34,6 +36,23 @@ interface QuizData {
   
     if (!response.ok) {
       throw new Error("Failed to generate content")
+    }
+  
+    return response.json()
+  }
+  
+  export async function getNextQuizQuestion(previousAnswer?: boolean): Promise<QuizQuestion> {
+    // This function will be called to get the next question based on the previous answer
+    const response = await fetch("/api/next-question", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ previousAnswer }),
+    })
+  
+    if (!response.ok) {
+      throw new Error("Failed to get next question")
     }
   
     return response.json()

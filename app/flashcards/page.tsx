@@ -5,33 +5,28 @@ import { motion, AnimatePresence, type HTMLMotionProps } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, RotateCcw, ChevronDown } from "lucide-react"
+import { useRouter } from "next/navigation"
 
-const flashcardsData = [
+// Demo flashcards data
+const demoFlashcardsData = [
   {
+    id: 1,
     front: "What is photosynthesis?",
     back: "Photosynthesis is the process by which plants use sunlight, water and carbon dioxide to produce oxygen and energy in the form of sugar.",
   },
   {
+    id: 2,
     front: "What are the main components needed for photosynthesis?",
     back: "The main components needed for photosynthesis are: sunlight, water, carbon dioxide, and chlorophyll.",
   },
-  {
-    front: "Where does photosynthesis take place in the plant?",
-    back: "Photosynthesis primarily takes place in the leaves of plants, specifically in the chloroplasts of plant cells.",
-  },
-  {
-    front: "What is the role of chlorophyll in photosynthesis?",
-    back: "Chlorophyll is the pigment that gives plants their green color and is responsible for absorbing light energy used in photosynthesis.",
-  },
-  {
-    front: "What are the two main stages of photosynthesis?",
-    back: "The two main stages of photosynthesis are the light-dependent reactions and the light-independent reactions (Calvin cycle).",
-  },
-  {
-    front: "Explain the light-dependent reactions of photosynthesis",
-    back: "The light-dependent reactions of photosynthesis occur in the thylakoid membranes of chloroplasts. These reactions involve the following steps:\n\n1. Light absorption by chlorophyll and other pigments\n2. Excitation of electrons and their transfer through an electron transport chain\n3. Generation of a proton gradient across the thylakoid membrane\n4. Production of ATP through chemiosmosis\n5. Reduction of NADP+ to NADPH\n\nThese reactions produce ATP and NADPH, which are then used in the light-independent reactions (Calvin cycle) to produce glucose.",
-  },
+  // Add more demo flashcards here...
 ]
+
+interface FlashcardData {
+  id: number
+  front: string
+  back: string
+}
 
 const ScrollIndicator = () => (
   <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 animate-bounce">
@@ -47,15 +42,38 @@ type MotionDivProps = HTMLMotionProps<"div"> & {
 const MotionDiv = motion.div as React.ComponentType<MotionDivProps>
 
 export default function FlashcardsPage() {
+  const [flashcardsData, setFlashcardsData] = useState<FlashcardData[]>([])
   const [currentCard, setCurrentCard] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
   const [showScrollIndicator, setShowScrollIndicator] = useState(false)
+  const [isDemo, setIsDemo] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
+
+  useEffect(() => {
+    const contentMode = localStorage.getItem("contentMode")
+    if (contentMode === "demo") {
+      setFlashcardsData(demoFlashcardsData)
+      setIsDemo(true)
+    } else {
+      const storedContent = localStorage.getItem("generatedContent")
+      if (storedContent) {
+        const parsedContent = JSON.parse(storedContent)
+        if (parsedContent.type === "flashcard") {
+          setFlashcardsData(parsedContent.content)
+        } else {
+          router.push("/quiz")
+        }
+      } else {
+        router.push("/quiz-options")
+      }
+    }
+  }, [router])
 
   useEffect(() => {
     setIsFlipped(false)
     checkOverflow()
-  }, [currentCard])
+  }, [currentCard]) //Fixed unnecessary dependency
 
   const checkOverflow = () => {
     if (contentRef.current) {
@@ -76,9 +94,15 @@ export default function FlashcardsPage() {
     setIsFlipped(false)
   }
 
+  if (flashcardsData.length === 0) {
+    return <div>Loading...</div>
+  }
+
   return (
     <div className="container mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold text-center mb-10">Photosynthesis Flashcards</h1>
+      <h1 className="text-3xl font-bold text-center mb-10">
+        {isDemo ? "Demo Flashcards: Photosynthesis" : "Flashcards"}
+      </h1>
       <div className="flex flex-col items-center">
         <AnimatePresence mode="wait">
           <MotionDiv

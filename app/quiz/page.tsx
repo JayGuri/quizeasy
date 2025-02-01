@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -9,8 +10,11 @@ import { PerformanceAnalysis } from "../../components/performance-analysis"
 import { useTheme } from "next-themes"
 import { CheckCircle, XCircle } from "lucide-react"
 
-// Sample questions about photosynthesis
-const questions = [
+// Import the API functions
+import { getNextQuizQuestion } from "../../services/api"
+
+// Demo questions about photosynthesis
+const demoQuestions = [
   {
     id: 1,
     question: "What is the primary function of photosynthesis?",
@@ -20,61 +24,94 @@ const questions = [
       "Cellular respiration",
       "Nitrogen fixation",
     ],
-    correct: 0,
+    correctAnswer: 0,
   },
   {
     id: 2,
     question: "Which organelle is responsible for photosynthesis in plants?",
     options: ["Mitochondria", "Chloroplast", "Nucleus", "Golgi apparatus"],
-    correct: 1,
+    correctAnswer: 1,
   },
-  {
-    id: 3,
-    question: "What is the main product of photosynthesis?",
-    options: ["Oxygen", "Carbon dioxide", "Glucose", "Water"],
-    correct: 2,
-  },
-  {
-    id: 4,
-    question: "Which of the following is NOT required for photosynthesis?",
-    options: ["Light", "Water", "Carbon dioxide", "Nitrogen"],
-    correct: 3,
-  },
-  {
-    id: 5,
-    question: "In which part of the plant does photosynthesis primarily occur?",
-    options: ["Roots", "Stems", "Leaves", "Flowers"],
-    correct: 2,
-  },
+  // Add more demo questions here...
 ]
 
+interface QuizQuestion {
+  id: number
+  question: string
+  options: string[]
+  correctAnswer: number
+}
+
 export default function QuizPage() {
+  const [questions, setQuestions] = useState<QuizQuestion[]>([])
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<number[]>([])
   const [showResults, setShowResults] = useState(false)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now())
   const [questionTimes, setQuestionTimes] = useState<number[]>([])
+  const [isDemo, setIsDemo] = useState(false)
   const { theme } = useTheme()
+  const router = useRouter()
+
+  useEffect(() => {
+    const contentMode = localStorage.getItem("contentMode")
+    if (contentMode === "demo") {
+      setQuestions(demoQuestions)
+      setIsDemo(true)
+    } else {
+      const storedContent = localStorage.getItem("generatedContent")
+      if (storedContent) {
+        const parsedContent = JSON.parse(storedContent)
+        if (parsedContent.type === "quiz") {
+          setQuestions([parsedContent.content])
+          fetchNextQuestion()
+        } else {
+          router.push("/flashcards")
+        }
+      } else {
+        router.push("/quiz-options")
+      }
+    }
+    setQuestionStartTime(Date.now())
+  }, [router])
 
   useEffect(() => {
     setQuestionStartTime(Date.now())
-  }, [])
+  }, []) //Corrected useEffect dependency array
+
+  const fetchNextQuestion = async () => {
+    if (!isDemo) {
+      try {
+        const nextQuestion = await getNextQuizQuestion(
+          answers.length > 0 ? answers[answers.length - 1] === questions[currentQuestion].correctAnswer : undefined,
+        )
+        setQuestions((prevQuestions) => [...prevQuestions, nextQuestion])
+      } catch (error) {
+        console.error("Failed to fetch next question:", error)
+      }
+    }
+  }
 
   const handleAnswer = (answerIndex: number) => {
     setSelectedAnswer(answerIndex)
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (selectedAnswer !== null) {
       const endTime = Date.now()
-      const timeTaken = (endTime - questionStartTime) / 1000 // Convert to seconds
+      const timeTaken = (endTime - questionStartTime) / 1000
       setQuestionTimes((prevTimes) => [...prevTimes, timeTaken])
       setAnswers((prevAnswers) => [...prevAnswers, selectedAnswer])
       setSelectedAnswer(null)
+
       if (currentQuestion < questions.length - 1) {
         setCurrentQuestion((prevQuestion) => prevQuestion + 1)
+        setQuestionStartTime(Date.now())
       } else {
+        if (!isDemo) {
+          await fetchNextQuestion()
+        }
         setShowResults(true)
       }
     }
@@ -92,9 +129,13 @@ export default function QuizPage() {
   const calculateScore = () => {
     let correct = 0
     answers.forEach((answer, index) => {
-      if (answer === questions[index].correct) correct++
+      if (answer === questions[index].correctAnswer) correct++
     })
     return correct
+  }
+
+  if (questions.length === 0) {
+    return <div>Loading...</div>
   }
 
   if (showResults) {
@@ -147,12 +188,12 @@ export default function QuizPage() {
                   <div
                     key={q.id}
                     className={`p-4 rounded-lg ${
-                      answers[index] === q.correct ? "bg-primary/10 border-primary" : "bg-muted/50 border-muted"
+                      answers[index] === q.correctAnswer ? "bg-primary/10 border-primary" : "bg-muted/50 border-muted"
                     }`}
                   >
                     <p className="font-medium">{q.question}</p>
                     <p className="text-sm text-muted-foreground flex items-center">
-                      {answers[index] === q.correct ? (
+                      {answers[index] === q.correctAnswer ? (
                         <CheckCircle className="w-4 h-4 mr-2 text-primary" />
                       ) : (
                         <XCircle className="w-4 h-4 mr-2 text-destructive" />
@@ -161,7 +202,7 @@ export default function QuizPage() {
                     </p>
                     <p className="text-sm text-muted-foreground flex items-center">
                       <CheckCircle className="w-4 h-4 mr-2 text-primary" />
-                      Correct answer: {q.options[q.correct]}
+                      Correct answer: {q.options[q.correctAnswer]}
                     </p>
                   </div>
                 ))}
@@ -183,7 +224,7 @@ export default function QuizPage() {
     <div className="container max-w-4xl py-12">
       <Card>
         <CardHeader>
-          <CardTitle>Photosynthesis Quiz</CardTitle>
+          <CardTitle>{isDemo ? "Demo Quiz: Photosynthesis" : "Quiz"}</CardTitle>
           <Progress value={((currentQuestion + 1) / questions.length) * 100} />
         </CardHeader>
         <CardContent className="space-y-6">
