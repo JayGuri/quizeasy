@@ -1,8 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react"
 
 const flashcardsData = [
   {
@@ -32,41 +34,75 @@ export default function FlashcardsPage() {
   const [isFlipped, setIsFlipped] = useState(false)
 
   const nextCard = () => {
-    setCurrentCard((prev) => (prev + 1) % flashcardsData.length)
     setIsFlipped(false)
+    setTimeout(() => {
+      setCurrentCard((prev) => (prev + 1) % flashcardsData.length)
+    }, 200)
   }
 
   const prevCard = () => {
-    setCurrentCard((prev) => (prev - 1 + flashcardsData.length) % flashcardsData.length)
     setIsFlipped(false)
+    setTimeout(() => {
+      setCurrentCard((prev) => (prev - 1 + flashcardsData.length) % flashcardsData.length)
+    }, 200)
+  }
+
+  const resetCards = () => {
+    setIsFlipped(false)
+    setTimeout(() => {
+      setCurrentCard(0)
+    }, 200)
   }
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto py-10 px-4">
       <h1 className="text-3xl font-bold text-center mb-10">Photosynthesis Flashcards</h1>
       <div className="flex flex-col items-center">
-        <Card className="w-full max-w-2xl h-64 perspective">
-          <CardContent
-            className={`w-full h-full transition-transform duration-500 preserve-3d cursor-pointer ${
-              isFlipped ? "rotate-y-180" : ""
-            }`}
-            onClick={() => setIsFlipped(!isFlipped)}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentCard}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            transition={{ duration: 0.3 }}
+            className="w-full max-w-2xl perspective-1000"
           >
-            <div className="absolute w-full h-full backface-hidden flex items-center justify-center p-6 text-center">
-              <p className="text-xl">{flashcardsData[currentCard].front}</p>
-            </div>
-            <div className="absolute w-full h-full backface-hidden rotate-y-180 flex items-center justify-center p-6 text-center bg-primary text-primary-foreground rounded-lg">
-              <p>{flashcardsData[currentCard].back}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <div className="flex justify-between w-full max-w-2xl mt-6">
-          <Button onClick={prevCard}>Previous</Button>
+            <Card className="w-full h-64 cursor-pointer">
+              <CardContent className="p-0 h-full">
+                <motion.div
+                  className="w-full h-full"
+                  animate={{ rotateY: isFlipped ? 180 : 0 }}
+                  transition={{ duration: 0.6 }}
+                  onClick={() => setIsFlipped(!isFlipped)}
+                >
+                  <div className="absolute w-full h-full backface-hidden flex items-center justify-center p-6 text-center">
+                    <p className="text-xl">{flashcardsData[currentCard].front}</p>
+                  </div>
+                  <div className="absolute w-full h-full backface-hidden rotate-y-180 flex items-center justify-center p-6 text-center bg-primary text-primary-foreground rounded-lg">
+                    <p>{flashcardsData[currentCard].back}</p>
+                  </div>
+                </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </AnimatePresence>
+        <div className="flex justify-between items-center w-full max-w-2xl mt-6">
+          <Button onClick={prevCard} variant="outline" size="icon">
+            <ChevronLeft className="h-4 w-4" />
+            <span className="sr-only">Previous card</span>
+          </Button>
           <p className="text-center">
             Card {currentCard + 1} of {flashcardsData.length}
           </p>
-          <Button onClick={nextCard}>Next</Button>
+          <Button onClick={nextCard} variant="outline" size="icon">
+            <ChevronRight className="h-4 w-4" />
+            <span className="sr-only">Next card</span>
+          </Button>
         </div>
+        <Button onClick={resetCards} variant="outline" className="mt-4">
+          <RotateCcw className="h-4 w-4 mr-2" />
+          Reset
+        </Button>
       </div>
     </div>
   )
