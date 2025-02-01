@@ -1,209 +1,140 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
-import { PerformanceAnalysis } from "../../components/performance-analysis"
-import { useTheme } from "next-themes"
+import { ChevronLeft, ChevronRight, RotateCcw, ChevronDown } from "lucide-react"
 
-// Sample questions about photosynthesis
-const questions = [
+const flashcardsData = [
   {
-    id: 1,
-    question: "What is the primary function of photosynthesis?",
-    options: [
-      "Converting light energy to chemical energy",
-      "Breaking down glucose",
-      "Cellular respiration",
-      "Nitrogen fixation",
-    ],
-    correct: 0,
+    front: "What is photosynthesis?",
+    back: "Photosynthesis is the process by which plants use sunlight, water and carbon dioxide to produce oxygen and energy in the form of sugar.",
   },
   {
-    id: 2,
-    question: "Which organelle is responsible for photosynthesis in plants?",
-    options: ["Mitochondria", "Chloroplast", "Nucleus", "Golgi apparatus"],
-    correct: 1,
+    front: "What are the main components needed for photosynthesis?",
+    back: "The main components needed for photosynthesis are: sunlight, water, carbon dioxide, and chlorophyll.",
   },
   {
-    id: 3,
-    question: "What is the main product of photosynthesis?",
-    options: ["Oxygen", "Carbon dioxide", "Glucose", "Water"],
-    correct: 2,
+    front: "Where does photosynthesis take place in the plant?",
+    back: "Photosynthesis primarily takes place in the leaves of plants, specifically in the chloroplasts of plant cells.",
   },
   {
-    id: 4,
-    question: "Which of the following is NOT required for photosynthesis?",
-    options: ["Light", "Water", "Carbon dioxide", "Nitrogen"],
-    correct: 3,
+    front: "What is the role of chlorophyll in photosynthesis?",
+    back: "Chlorophyll is the pigment that gives plants their green color and is responsible for absorbing light energy used in photosynthesis.",
   },
   {
-    id: 5,
-    question: "In which part of the plant does photosynthesis primarily occur?",
-    options: ["Roots", "Stems", "Leaves", "Flowers"],
-    correct: 2,
+    front: "What are the two main stages of photosynthesis?",
+    back: "The two main stages of photosynthesis are the light-dependent reactions and the light-independent reactions (Calvin cycle).",
+  },
+  {
+    front: "Explain the light-dependent reactions of photosynthesis",
+    back: "The light-dependent reactions of photosynthesis occur in the thylakoid membranes of chloroplasts. These reactions involve the following steps:\n\n1. Light absorption by chlorophyll and other pigments\n2. Excitation of electrons and their transfer through an electron transport chain\n3. Generation of a proton gradient across the thylakoid membrane\n4. Production of ATP through chemiosmosis\n5. Reduction of NADP+ to NADPH\n\nThese reactions produce ATP and NADPH, which are then used in the light-independent reactions (Calvin cycle) to produce glucose.",
   },
 ]
 
-export default function QuizPage() {
-  const [currentQuestion, setCurrentQuestion] = useState(0)
-  const [answers, setAnswers] = useState<number[]>([])
-  const [showResults, setShowResults] = useState(false)
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
-  const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now())
-  const [questionTimes, setQuestionTimes] = useState<number[]>([])
-  const { theme } = useTheme()
+const ScrollIndicator = () => (
+  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 animate-bounce">
+    <ChevronDown className="w-6 h-6 text-muted-foreground/50" />
+  </div>
+)
+
+const MotionDiv = motion.div
+
+export default function FlashcardsPage() {
+  const [currentCard, setCurrentCard] = useState(0)
+  const [isFlipped, setIsFlipped] = useState(false)
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false)
+  const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setQuestionStartTime(Date.now())
-  }, [])
+    setIsFlipped(false)
+    checkOverflow()
+  }, [isFlipped]) //Corrected dependency
 
-  const handleAnswer = (answerIndex: number) => {
-    setSelectedAnswer(answerIndex)
-  }
-
-  const handleNext = () => {
-    if (selectedAnswer !== null) {
-      const endTime = Date.now()
-      const timeTaken = (endTime - questionStartTime) / 1000 // Convert to seconds
-      setQuestionTimes((prevTimes) => [...prevTimes, timeTaken])
-      setAnswers((prevAnswers) => [...prevAnswers, selectedAnswer])
-      setSelectedAnswer(null)
-      if (currentQuestion < questions.length - 1) {
-        setCurrentQuestion((prevQuestion) => prevQuestion + 1)
-      } else {
-        setShowResults(true)
-      }
+  const checkOverflow = () => {
+    if (contentRef.current) {
+      setShowScrollIndicator(contentRef.current.scrollHeight > contentRef.current.clientHeight)
     }
   }
 
-  const handlePrevious = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion((prevQuestion) => prevQuestion - 1)
-      setAnswers((prevAnswers) => prevAnswers.slice(0, -1))
-      setQuestionTimes((prevTimes) => prevTimes.slice(0, -1))
-      setSelectedAnswer(null)
-    }
+  const nextCard = () => {
+    setCurrentCard((prev) => (prev + 1) % flashcardsData.length)
   }
 
-  const calculateScore = () => {
-    let correct = 0
-    answers.forEach((answer, index) => {
-      if (answer === questions[index].correct) correct++
-    })
-    return correct
+  const prevCard = () => {
+    setCurrentCard((prev) => (prev - 1 + flashcardsData.length) % flashcardsData.length)
   }
 
-  if (showResults) {
-    const score = calculateScore()
-    const correctAnswers = score
-    const incorrectAnswers = questions.length - score
-    const data = [
-      { name: "Correct", value: correctAnswers },
-      { name: "Incorrect", value: incorrectAnswers },
-    ]
-    const COLORS = ["hsl(var(--primary))", theme === "dark" ? "hsl(var(--background))" : "hsl(var(--foreground))"]
-    const totalTime = questionTimes.reduce((sum, time) => sum + time, 0)
-
-    const CustomTooltip = ({ active, payload }: any) => {
-      if (active && payload && payload.length) {
-        const data = payload[0].payload
-        return (
-          <div className="bg-background p-2 border rounded shadow">
-            <p className="font-semibold">{`${data.name}: ${data.value}`}</p>
-            <p>{`${((data.value / questions.length) * 100).toFixed(1)}%`}</p>
-          </div>
-        )
-      }
-      return null
-    }
-
-    return (
-      <div className="container max-w-4xl py-12">
-        <Card>
-          <CardHeader>
-            <CardTitle>Quiz Results</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={data} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value">
-                    {data.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="hsl(var(--border))" />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-2xl font-bold">Your Score: {((score / questions.length) * 100).toFixed(1)}%</h3>
-              <div className="space-y-2">
-                {questions.map((q, index) => (
-                  <div
-                    key={q.id}
-                    className={`p-4 rounded-lg ${
-                      answers[index] === q.correct ? "bg-primary/10 border-primary" : "bg-muted/50 border-muted"
-                    }`}
-                  >
-                    <p className="font-medium">{q.question}</p>
-                    <p className="text-sm text-muted-foreground">Your answer: {q.options[answers[index]]}</p>
-                    <p className="text-sm text-muted-foreground">Correct answer: {q.options[q.correct]}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <PerformanceAnalysis
-              score={score}
-              totalQuestions={questions.length}
-              timeSpent={totalTime}
-              questionTimes={questionTimes}
-            />
-          </CardContent>
-        </Card>
-      </div>
-    )
+  const resetCards = () => {
+    setCurrentCard(0)
+    setIsFlipped(false)
   }
 
   return (
-    <div className="container max-w-4xl py-12">
-      <Card>
-        <CardHeader>
-          <CardTitle>Photosynthesis Quiz</CardTitle>
-          <Progress value={((currentQuestion + 1) / questions.length) * 100} />
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-4">
-            <h2 className="text-xl font-medium">
-              Question {currentQuestion + 1} of {questions.length}
-            </h2>
-            <p>{questions[currentQuestion].question}</p>
-            <div className="grid gap-2">
-              {questions[currentQuestion].options.map((option, index) => (
-                <Button
-                  key={index}
-                  variant={selectedAnswer === index ? "default" : "outline"}
-                  className="justify-start"
-                  onClick={() => handleAnswer(index)}
+    <div className="container mx-auto py-10 px-4">
+      <h1 className="text-3xl font-bold text-center mb-10">Photosynthesis Flashcards</h1>
+      <div className="flex flex-col items-center">
+        <AnimatePresence mode="wait">
+          <MotionDiv
+            key={currentCard}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            transition={{ duration: 0.3 }}
+            className="w-full max-w-3xl perspective-1000"
+          >
+            <Card className="w-full h-[400px] md:h-[500px]">
+              <CardContent className="p-0 h-full">
+                <MotionDiv
+                  className="w-full h-full relative"
+                  initial={false}
+                  animate={{ rotateY: isFlipped ? 180 : 0 }}
+                  transition={{ duration: 0.6 }}
+                  style={{ transformStyle: "preserve-3d" }}
+                  onClick={() => setIsFlipped(!isFlipped)}
                 >
-                  {option}
-                </Button>
-              ))}
-            </div>
-          </div>
-          <div className="flex justify-between">
-            <Button variant="outline" onClick={handlePrevious} disabled={currentQuestion === 0}>
-              Previous
-            </Button>
-            <Button onClick={handleNext} disabled={selectedAnswer === null}>
-              {currentQuestion === questions.length - 1 ? "Finish" : "Next"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+                  <div className="absolute w-full h-full backface-hidden flex flex-col items-center justify-center p-8 text-center overflow-y-auto">
+                    <div ref={contentRef} className="w-full max-h-full overflow-y-auto">
+                      <p className="text-2xl font-semibold">{flashcardsData[currentCard].front}</p>
+                    </div>
+                    {showScrollIndicator && <ScrollIndicator />}
+                  </div>
+                  <div
+                    className="absolute w-full h-full backface-hidden rotate-y-180 flex flex-col items-center justify-center p-8 text-center bg-primary text-primary-foreground rounded-lg overflow-y-auto"
+                    style={{
+                      backgroundImage:
+                        "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)",
+                    }}
+                  >
+                    <div ref={contentRef} className="w-full max-h-full overflow-y-auto">
+                      <p className="text-xl">{flashcardsData[currentCard].back}</p>
+                    </div>
+                    {showScrollIndicator && <ScrollIndicator />}
+                  </div>
+                </MotionDiv>
+              </CardContent>
+            </Card>
+          </MotionDiv>
+        </AnimatePresence>
+        <div className="flex justify-between items-center w-full max-w-3xl mt-6">
+          <Button onClick={prevCard} variant="outline" size="icon">
+            <ChevronLeft className="h-4 w-4" />
+            <span className="sr-only">Previous card</span>
+          </Button>
+          <p className="text-center">
+            Card {currentCard + 1} of {flashcardsData.length}
+          </p>
+          <Button onClick={nextCard} variant="outline" size="icon">
+            <ChevronRight className="h-4 w-4" />
+            <span className="sr-only">Next card</span>
+          </Button>
+        </div>
+        <Button onClick={resetCards} variant="outline" className="mt-4">
+          <RotateCcw className="h-4 w-4 mr-2" />
+          Reset
+        </Button>
+      </div>
     </div>
   )
 }

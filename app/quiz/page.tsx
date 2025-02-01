@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import { PerformanceAnalysis } from "../../components/performance-analysis"
 import { useTheme } from "next-themes"
+import { CheckCircle, XCircle } from "lucide-react"
 
 // Sample questions about photosynthesis
 const questions = [
@@ -52,12 +53,12 @@ export default function QuizPage() {
   const [answers, setAnswers] = useState<number[]>([])
   const [showResults, setShowResults] = useState(false)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
-  const [startTime, setStartTime] = useState<number | null>(null)
-  const [endTime, setEndTime] = useState<number | null>(null)
+  const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now())
+  const [questionTimes, setQuestionTimes] = useState<number[]>([])
   const { theme } = useTheme()
 
   useEffect(() => {
-    setStartTime(Date.now())
+    setQuestionStartTime(Date.now())
   }, [])
 
   const handleAnswer = (answerIndex: number) => {
@@ -66,12 +67,14 @@ export default function QuizPage() {
 
   const handleNext = () => {
     if (selectedAnswer !== null) {
-      setAnswers([...answers, selectedAnswer])
+      const endTime = Date.now()
+      const timeTaken = (endTime - questionStartTime) / 1000 // Convert to seconds
+      setQuestionTimes((prevTimes) => [...prevTimes, timeTaken])
+      setAnswers((prevAnswers) => [...prevAnswers, selectedAnswer])
       setSelectedAnswer(null)
       if (currentQuestion < questions.length - 1) {
-        setCurrentQuestion(currentQuestion + 1)
+        setCurrentQuestion((prevQuestion) => prevQuestion + 1)
       } else {
-        setEndTime(Date.now())
         setShowResults(true)
       }
     }
@@ -79,8 +82,9 @@ export default function QuizPage() {
 
   const handlePrevious = () => {
     if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1)
-      setAnswers(answers.slice(0, -1))
+      setCurrentQuestion((prevQuestion) => prevQuestion - 1)
+      setAnswers((prevAnswers) => prevAnswers.slice(0, -1))
+      setQuestionTimes((prevTimes) => prevTimes.slice(0, -1))
       setSelectedAnswer(null)
     }
   }
@@ -102,7 +106,7 @@ export default function QuizPage() {
       { name: "Incorrect", value: incorrectAnswers },
     ]
     const COLORS = ["hsl(var(--primary))", theme === "dark" ? "hsl(var(--background))" : "hsl(var(--foreground))"]
-    const timeSpent = endTime && startTime ? (endTime - startTime) / 1000 : 0
+    const totalTime = questionTimes.reduce((sum, time) => sum + time, 0)
 
     const CustomTooltip = ({ active, payload }: any) => {
       if (active && payload && payload.length) {
@@ -147,13 +151,28 @@ export default function QuizPage() {
                     }`}
                   >
                     <p className="font-medium">{q.question}</p>
-                    <p className="text-sm text-muted-foreground">Your answer: {q.options[answers[index]]}</p>
-                    <p className="text-sm text-muted-foreground">Correct answer: {q.options[q.correct]}</p>
+                    <p className="text-sm text-muted-foreground flex items-center">
+                      {answers[index] === q.correct ? (
+                        <CheckCircle className="w-4 h-4 mr-2 text-primary" />
+                      ) : (
+                        <XCircle className="w-4 h-4 mr-2 text-destructive" />
+                      )}
+                      Your answer: {q.options[answers[index]]}
+                    </p>
+                    <p className="text-sm text-muted-foreground flex items-center">
+                      <CheckCircle className="w-4 h-4 mr-2 text-primary" />
+                      Correct answer: {q.options[q.correct]}
+                    </p>
                   </div>
                 ))}
               </div>
             </div>
-            <PerformanceAnalysis score={score} totalQuestions={questions.length} timeSpent={timeSpent} />
+            <PerformanceAnalysis
+              score={score}
+              totalQuestions={questions.length}
+              timeSpent={totalTime}
+              questionTimes={questionTimes}
+            />
           </CardContent>
         </Card>
       </div>
