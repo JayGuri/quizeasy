@@ -18,12 +18,14 @@ export default function QuizOptionsPage() {
   const [mode, setMode] = useState<"flashcard" | "quiz">("quiz")
   const router = useRouter()
 
+  // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0])
     }
   }
 
+  // Handle form submission for custom content generation
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (file) {
@@ -32,6 +34,7 @@ export default function QuizOptionsPage() {
         const data = await generateContent(file, mode, numItems, topic)
         // Store the received data in localStorage
         localStorage.setItem("generatedContent", JSON.stringify(data))
+        localStorage.setItem("contentMode", "custom") // Set mode to custom
         router.push(mode === "quiz" ? "/quiz" : "/flashcards")
       } catch (error) {
         console.error("Error generating content:", error)
@@ -42,8 +45,9 @@ export default function QuizOptionsPage() {
     }
   }
 
+  // Handle click for demo content
   const handleDemoClick = (demoMode: "quiz" | "flashcard") => {
-    localStorage.setItem("contentMode", "demo")
+    localStorage.setItem("contentMode", "demo") // Set mode to demo
     router.push(demoMode === "quiz" ? "/quiz" : "/flashcards")
   }
 
@@ -53,6 +57,7 @@ export default function QuizOptionsPage() {
         Choose Your Learning Experience
       </h1>
       <div className="grid md:grid-cols-2 gap-6">
+        {/* Demo Content Card */}
         <Card className="w-full">
           <CardHeader>
             <CardTitle>Try a Demo</CardTitle>
@@ -69,6 +74,7 @@ export default function QuizOptionsPage() {
           </CardFooter>
         </Card>
 
+        {/* Custom Content Card */}
         <Card className="w-full">
           <CardHeader>
             <CardTitle>Upload Your Own Content</CardTitle>
@@ -77,10 +83,12 @@ export default function QuizOptionsPage() {
           <CardContent>
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
+                {/* File upload input */}
                 <div>
                   <Label htmlFor="pdf-upload">Upload PDF</Label>
                   <Input id="pdf-upload" type="file" accept=".pdf" className="mt-2" onChange={handleFileChange} />
                 </div>
+                {/* Mode selection (Quiz or Flashcards) */}
                 <RadioGroup defaultValue="quiz" onValueChange={(value) => setMode(value as "quiz" | "flashcard")}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="quiz" id="quiz" />
@@ -91,6 +99,7 @@ export default function QuizOptionsPage() {
                     <Label htmlFor="flashcard">Flashcards</Label>
                   </div>
                 </RadioGroup>
+                {/* Number of items input */}
                 <div>
                   <Label htmlFor="num-items">{mode === "quiz" ? "Number of Questions" : "Number of Flashcards"}</Label>
                   <Input
@@ -103,6 +112,7 @@ export default function QuizOptionsPage() {
                     className="mt-2"
                   />
                 </div>
+                {/* Optional topic input */}
                 <div>
                   <Label htmlFor="topic">Specific Topic (optional)</Label>
                   <Input
@@ -114,6 +124,7 @@ export default function QuizOptionsPage() {
                     className="mt-2"
                   />
                 </div>
+                {/* Submit button */}
                 <Button type="submit" className="w-full" disabled={!file || isLoading}>
                   {isLoading ? "Processing..." : `Generate ${mode === "quiz" ? "Quiz" : "Flashcards"}`}
                 </Button>

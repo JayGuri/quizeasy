@@ -51,23 +51,23 @@
   .colorblind {
     --background: 0 0% 100%;
     --foreground: 0 0% 0%;
-    --card: 0 0% 95%;
+    --card: 0 0% 100%;
     --card-foreground: 0 0% 0%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 0%;
-    --primary: 230 55% 50%;
+    --primary: 230 48% 47%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 35 100% 50%;
+    --secondary: 10 90% 80%;
     --secondary-foreground: 0 0% 0%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 270 50% 40%;
+    --accent: 230 48% 47%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 270 50% 40%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 230 55% 50%;
+    --ring: 230 48% 47%;
   }
 }
 
@@ -87,8 +87,11 @@
 }
 
 @layer utilities {
-  .perspective-1000 {
-    perspective: 1000px;
+  .perspective {
+    perspective: 2000px;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
   }
   .backface-hidden {
     backface-visibility: hidden;

@@ -14,7 +14,7 @@ interface FlashcardData {
   
   interface GenerateContentResponse {
     type: "flashcard" | "quiz"
-    content: FlashcardData[] | QuizQuestion
+    content: FlashcardData[] | QuizQuestion[]
   }
   
   export async function generateContent(
@@ -42,7 +42,6 @@ interface FlashcardData {
   }
   
   export async function getNextQuizQuestion(previousAnswer?: boolean): Promise<QuizQuestion> {
-    // This function will be called to get the next question based on the previous answer
     const response = await fetch("/api/next-question", {
       method: "POST",
       headers: {
