@@ -1,4 +1,3 @@
-
 export interface Flashcard {
     topic: string;
     question: string;
@@ -43,13 +42,17 @@ export const uploadPDF = async (
 export const getNextFlashcard = async (sessionId: string): Promise<NextFlashcardResponse> => {
     const response = await fetch("http://localhost:8000/next-flashcard", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sessionId }),
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            session_id: sessionId
+        })
     });
 
     if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || "No more flashcards available.");
+        throw new Error(errorData.detail || "Failed to fetch next flashcard");
     }
 
     return response.json();

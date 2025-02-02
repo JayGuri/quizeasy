@@ -51,6 +51,7 @@ export default function FlashcardsPage() {
   const [flashcard, setFlashcard] = useState<Flashcard | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
+  const [remainingCards, setRemainingCards] = useState<number>(0)
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -74,14 +75,12 @@ export default function FlashcardsPage() {
     setError(null)
 
     try {
-      const data = await uploadPDF(
-        file, 
-        numCards, 
-        specificTopic || undefined
-      )
+      const data = await uploadPDF(file, numCards, specificTopic || undefined)
       setSessionId(data.session_id)
       setFlashcard(data.flashcard)
+      setRemainingCards(numCards - 1)
       setIsDemoMode(false)
+      setIsFlipped(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload PDF.")
     } finally {
@@ -92,30 +91,35 @@ export default function FlashcardsPage() {
   const handleNextFlashcard = async () => {
     setIsFlipped(false)
     if (isDemoMode) {
-      setCurrentCard((prev) => (prev + 1) % demoFlashcards.length)
+        setCurrentCard((prev) => (prev + 1) % demoFlashcards.length)
     } else {
-      if (!sessionId) {
-        setError("No session ID found. Please upload a PDF first.")
-        return
-      }
-
-      setLoading(true)
-      setError(null)
-
-      try {
-        const data = await getNextFlashcard(sessionId)
-        if (data.flashcard) {
-          setFlashcard(data.flashcard)
-        } else {
-          setError("No more flashcards available.")
+        if (!sessionId) {
+            setError("No session ID found. Please upload a PDF first.")
+            return
         }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch the next flashcard.")
-      } finally {
-        setLoading(false)
-      }
+
+        setLoading(true)
+        setError(null)
+
+        try {
+            const data = await getNextFlashcard(sessionId)
+            if (data.flashcard) {
+                setFlashcard(data.flashcard)
+                setRemainingCards((prev) => prev - 1)
+            } else {
+                setError("No more flashcards available.")
+                setRemainingCards(0)
+            }
+        } catch (err) {
+            console.error("Error fetching next flashcard:", err);
+            setError(err instanceof Error ? err.message : "Failed to fetch the next flashcard.")
+            setFlashcard(null)
+            setRemainingCards(0)
+        } finally {
+            setLoading(false)
+        }
     }
-  }
+}
 
   const handlePreviousFlashcard = () => {
     if (isDemoMode) {
@@ -138,6 +142,7 @@ export default function FlashcardsPage() {
     setFile(null)
     setNumCards(5)
     setSpecificTopic("")
+    setRemainingCards(0)
   }
 
   const switchToPDFUpload = () => {
@@ -186,9 +191,7 @@ export default function FlashcardsPage() {
           <div className="mb-10">
             <div className="grid gap-6 max-w-xl mx-auto bg-white p-6 rounded-lg shadow-sm">
               <div className="space-y-2">
-                <Label htmlFor="pdf-upload">
-                  Upload PDF
-                </Label>
+                <Label htmlFor="pdf-upload">Upload PDF</Label>
                 <Input
                   id="pdf-upload"
                   type="file"
@@ -199,9 +202,7 @@ export default function FlashcardsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="num-cards">
-                  Number of Flashcards (1-20)
-                </Label>
+                <Label htmlFor="num-cards">Number of Flashcards (1-20)</Label>
                 <Input
                   id="num-cards"
                   type="number"
@@ -214,9 +215,7 @@ export default function FlashcardsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="specific-topic">
-                  Specific Topic (Optional)
-                </Label>
+                <Label htmlFor="specific-topic">Specific Topic (Optional)</Label>
                 <Input
                   id="specific-topic"
                   type="text"
@@ -293,11 +292,12 @@ export default function FlashcardsPage() {
                 </Button>
               </div>
               <p className="text-sm text-muted-foreground">
-                {isDemoMode
+                {isDemoMode 
                   ? `Card ${currentCard + 1} of ${demoFlashcards.length}`
-                  : flashcard
-                    ? "Generated Flashcard"
-                    : "No flashcard available"}
+                  : remainingCards > 0 
+                    ? `${remainingCards} cards remaining`
+                    : "Last card"
+                }
               </p>
             </div>
           </div>
