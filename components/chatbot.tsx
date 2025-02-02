@@ -3,7 +3,9 @@
 import { useState, useRef, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "../components/ui/input"
-import { Button } from "../components/ui/button"
+import { Button } from "@/components/ui/button"
+import { Send, Loader2 } from "lucide-react"
+import { ChatMessage } from "./chat-message"
 
 interface ChatMessage {
   role: "user" | "assistant"
@@ -24,10 +26,12 @@ export function Chatbot({ sessionId }: ChatbotProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  useEffect(scrollToBottom, [])
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages, messagesEndRef]) // Added messagesEndRef to dependencies
 
   const handleSendMessage = async () => {
-    if (!input.trim()) return
+    if (!input.trim() || isLoading) return
 
     const userMessage: ChatMessage = { role: "user", content: input }
     setMessages((prev) => [...prev, userMessage])
@@ -35,7 +39,6 @@ export function Chatbot({ sessionId }: ChatbotProps) {
     setIsLoading(true)
 
     try {
-      // Replace this with your actual API call
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -54,7 +57,10 @@ export function Chatbot({ sessionId }: ChatbotProps) {
       setMessages((prev) => [...prev, assistantMessage])
     } catch (error) {
       console.error("Error in chat:", error)
-      // Handle error (e.g., show an error message to the user)
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "I'm sorry, but I encountered an error. Please try again later." },
+      ])
     } finally {
       setIsLoading(false)
     }
@@ -63,33 +69,30 @@ export function Chatbot({ sessionId }: ChatbotProps) {
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle>Chat with AI Assistant</CardTitle>
+        <CardTitle className="text-2xl font-bold">Chat with AI Assistant</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="h-[300px] mb-4 overflow-y-auto">
+      <CardContent className="space-y-4">
+        <div className="h-[300px] overflow-y-auto pr-4 space-y-4">
           {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`mb-2 p-2 rounded-lg ${
-                message.role === "user"
-                  ? "bg-primary text-primary-foreground ml-auto"
-                  : "bg-secondary text-secondary-foreground"
-              } max-w-[80%]`}
-            >
-              {message.content}
-            </div>
+            <ChatMessage key={index} role={message.role} content={message.content} />
           ))}
+          {isLoading && (
+            <div className="flex items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center space-x-2">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
             onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+            className="flex-grow"
           />
-          <Button onClick={handleSendMessage} disabled={isLoading}>
-            Send
+          <Button onClick={handleSendMessage} disabled={isLoading} size="icon">
+            <Send className="h-4 w-4" />
           </Button>
         </div>
       </CardContent>
