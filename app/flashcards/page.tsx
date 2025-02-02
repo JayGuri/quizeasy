@@ -5,8 +5,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react"
 import { uploadPDF, getNextFlashcard, type Flashcard } from "../../lib/api"
+import { Chatbot } from "../../components/chatbot"
 
 const demoFlashcards = [
   {
@@ -48,10 +49,10 @@ export default function FlashcardsPage() {
   const [numCards, setNumCards] = useState<number>(5)
   const [specificTopic, setSpecificTopic] = useState<string>("")
   const [sessionId, setSessionId] = useState<string | null>(null)
-  const [flashcard, setFlashcard] = useState<Flashcard | null>(null)
+  const [flashcards, setFlashcards] = useState<Flashcard[]>([])
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
-  const [remainingCards, setRemainingCards] = useState<number>(0)
+  const [isChatOpen, setIsChatOpen] = useState(false)
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -77,10 +78,20 @@ export default function FlashcardsPage() {
     try {
       const data = await uploadPDF(file, numCards, specificTopic || undefined)
       setSessionId(data.session_id)
-      setFlashcard(data.flashcard)
-      setRemainingCards(numCards - 1)
+      setFlashcards([data.flashcard as Flashcard])
+      setCurrentCard(0)
       setIsDemoMode(false)
       setIsFlipped(false)
+
+      // Fetch remaining flashcards
+      for (let i = 1; i < numCards; i++) {
+        const nextCard = await getNextFlashcard(data.session_id)
+        if (nextCard.flashcard) {
+          setFlashcards((prev) => [...prev, nextCard.flashcard as Flashcard])
+        } else {
+          break
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload PDF.")
     } finally {
@@ -88,43 +99,21 @@ export default function FlashcardsPage() {
     }
   }
 
-  const handleNextFlashcard = async () => {
+  const handleNextFlashcard = () => {
     setIsFlipped(false)
     if (isDemoMode) {
-        setCurrentCard((prev) => (prev + 1) % demoFlashcards.length)
+      setCurrentCard((prev) => (prev + 1) % demoFlashcards.length)
     } else {
-        if (!sessionId) {
-            setError("No session ID found. Please upload a PDF first.")
-            return
-        }
-
-        setLoading(true)
-        setError(null)
-
-        try {
-            const data = await getNextFlashcard(sessionId)
-            if (data.flashcard) {
-                setFlashcard(data.flashcard)
-                setRemainingCards((prev) => prev - 1)
-            } else {
-                setError("No more flashcards available.")
-                setRemainingCards(0)
-            }
-        } catch (err) {
-            console.error("Error fetching next flashcard:", err);
-            setError(err instanceof Error ? err.message : "Failed to fetch the next flashcard.")
-            setFlashcard(null)
-            setRemainingCards(0)
-        } finally {
-            setLoading(false)
-        }
+      setCurrentCard((prev) => (prev + 1) % flashcards.length)
     }
-}
+  }
 
   const handlePreviousFlashcard = () => {
+    setIsFlipped(false)
     if (isDemoMode) {
-      setIsFlipped(false)
       setCurrentCard((prev) => (prev - 1 + demoFlashcards.length) % demoFlashcards.length)
+    } else {
+      setCurrentCard((prev) => (prev - 1 + flashcards.length) % flashcards.length)
     }
   }
 
@@ -137,12 +126,11 @@ export default function FlashcardsPage() {
     setCurrentCard(0)
     setIsFlipped(false)
     setSessionId(null)
-    setFlashcard(null)
+    setFlashcards([])
     setError(null)
     setFile(null)
     setNumCards(5)
     setSpecificTopic("")
-    setRemainingCards(0)
   }
 
   const switchToPDFUpload = () => {
@@ -150,7 +138,7 @@ export default function FlashcardsPage() {
     setCurrentCard(0)
     setIsFlipped(false)
     setSessionId(null)
-    setFlashcard(null)
+    setFlashcards([])
     setError(null)
   }
 
@@ -158,31 +146,25 @@ export default function FlashcardsPage() {
     if (isDemoMode) {
       return demoFlashcards[currentCard]
     }
-    return flashcard
+    return flashcards[currentCard]
   }
 
   const currentFlashcard = getCurrentFlashcard()
 
+  const toggleChat = () => {
+    setIsChatOpen(!isChatOpen)
+  }
+
   return (
     <div className="min-h-screen overflow-hidden bg-gray-50">
       <div className="container max-w-4xl mx-auto px-4 py-10">
-        <h1 className="text-3xl font-bold text-center mb-10">
-          QuizEasy - Flashcard Generator
-        </h1>
+        <h1 className="text-3xl font-bold text-center mb-10">QuizEasy - Flashcard Generator</h1>
 
         <div className="flex justify-center mb-10 space-x-4">
-          <Button 
-            onClick={switchToDemo} 
-            variant={isDemoMode ? "default" : "outline"} 
-            className="w-40"
-          >
+          <Button onClick={switchToDemo} variant={isDemoMode ? "default" : "outline"} className="w-40">
             Demo Flashcards
           </Button>
-          <Button 
-            onClick={switchToPDFUpload} 
-            variant={!isDemoMode ? "default" : "outline"} 
-            className="w-40"
-          >
+          <Button onClick={switchToPDFUpload} variant={!isDemoMode ? "default" : "outline"} className="w-40">
             Upload PDF
           </Button>
         </div>
@@ -226,11 +208,7 @@ export default function FlashcardsPage() {
                 />
               </div>
 
-              <Button 
-                onClick={handleUpload} 
-                disabled={loading || !file}
-                className="w-full"
-              >
+              <Button onClick={handleUpload} disabled={loading || !file} className="w-full">
                 {loading ? "Generating Flashcards..." : "Generate Flashcards"}
               </Button>
             </div>
@@ -255,12 +233,8 @@ export default function FlashcardsPage() {
                 {/* Front of card */}
                 <div className="absolute inset-0 backface-hidden">
                   <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {currentFlashcard.topic}
-                    </p>
-                    <p className="text-xl font-medium">
-                      {currentFlashcard.question}
-                    </p>
+                    <p className="text-sm text-muted-foreground mb-4">{currentFlashcard.topic}</p>
+                    <p className="text-xl font-medium">{currentFlashcard.question}</p>
                   </div>
                 </div>
                 {/* Back of card */}
@@ -274,35 +248,34 @@ export default function FlashcardsPage() {
 
             <div className="mt-6 flex items-center justify-between">
               <div className="flex gap-2">
-                <Button 
-                  onClick={handlePreviousFlashcard} 
-                  disabled={loading || !isDemoMode} 
-                  className="w-40"
-                >
+                <Button onClick={handlePreviousFlashcard} disabled={loading} className="w-40">
                   <ChevronLeft className="mr-2 h-4 w-4" />
                   Previous
                 </Button>
-                <Button 
-                  onClick={handleNextFlashcard} 
-                  disabled={loading} 
-                  className="w-40"
-                >
+                <Button onClick={handleNextFlashcard} disabled={loading} className="w-40">
                   Next
                   <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
               <p className="text-sm text-muted-foreground">
-                {isDemoMode 
+                {isDemoMode
                   ? `Card ${currentCard + 1} of ${demoFlashcards.length}`
-                  : remainingCards > 0 
-                    ? `${remainingCards} cards remaining`
-                    : "Last card"
-                }
+                  : `Card ${currentCard + 1} of ${flashcards.length}`}
               </p>
             </div>
+
+            {!isDemoMode && (
+              <Button onClick={toggleChat} className="mt-4 w-full" variant="outline">
+                <MessageCircle className="mr-2 h-4 w-4" />
+                {isChatOpen ? "Close Chat" : "Open Chat"}
+              </Button>
+            )}
           </div>
         )}
+
+        {isChatOpen && !isDemoMode && sessionId && <Chatbot sessionId={sessionId} />}
       </div>
     </div>
   )
 }
+
