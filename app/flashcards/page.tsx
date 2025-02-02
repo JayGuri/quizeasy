@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { uploadPDF, getNextFlashcard, type Flashcard } from "../../lib/api"
 
 const demoFlashcards = [
@@ -104,6 +105,15 @@ export default function FlashcardsPage() {
     }
   }
 
+  const handlePreviousFlashcard = () => {
+    if (isDemoMode) {
+      setIsFlipped(false)
+      setCurrentCard((prev) => (prev - 1 + demoFlashcards.length) % demoFlashcards.length)
+    }
+    // Note: Previous functionality not available for generated flashcards
+    // as they are fetched sequentially from the API
+  }
+
   const toggleFlip = () => {
     setIsFlipped(!isFlipped)
   }
@@ -175,7 +185,7 @@ export default function FlashcardsPage() {
 
         {currentFlashcard && (
           <div className="relative mb-6">
-            <Card className="w-full aspect-[3/2] perspective">
+            <Card className="w-full aspect-[3/1.5] perspective">
               <CardContent
                 className={`absolute w-full h-full transition-transform duration-500 preserve-3d cursor-pointer ${
                   isFlipped ? "rotate-y-180" : ""
@@ -199,9 +209,16 @@ export default function FlashcardsPage() {
             </Card>
 
             <div className="mt-6 flex items-center justify-between">
-              <Button onClick={handleNextFlashcard} disabled={loading} className="w-40">
-                {loading ? "Loading..." : "Next Flashcard"}
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={handlePreviousFlashcard} disabled={loading || !isDemoMode} className="w-40">
+                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  Previous
+                </Button>
+                <Button onClick={handleNextFlashcard} disabled={loading} className="w-40">
+                  Next
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
               <p className="text-sm text-muted-foreground">
                 {isDemoMode
                   ? `Card ${currentCard + 1} of ${demoFlashcards.length}`
