@@ -45,6 +45,8 @@ export default function FlashcardsPage() {
   const [isFlipped, setIsFlipped] = useState(false)
   const [isDemoMode, setIsDemoMode] = useState(true)
   const [file, setFile] = useState<File | null>(null)
+  const [numCards, setNumCards] = useState<number>(5)
+  const [specificTopic, setSpecificTopic] = useState<string>("")
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [flashcard, setFlashcard] = useState<Flashcard | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
@@ -53,6 +55,7 @@ export default function FlashcardsPage() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       setFile(event.target.files[0])
+      setError(null)
     }
   }
 
@@ -62,16 +65,25 @@ export default function FlashcardsPage() {
       return
     }
 
+    if (numCards < 1 || numCards > 20) {
+      setError("Please enter a number between 1 and 20.")
+      return
+    }
+
     setLoading(true)
     setError(null)
 
     try {
-      const data = await uploadPDF(file, 5)
+      const data = await uploadPDF(
+        file, 
+        numCards, 
+        specificTopic || undefined
+      )
       setSessionId(data.session_id)
       setFlashcard(data.flashcard)
       setIsDemoMode(false)
     } catch (err) {
-      setError("Failed to upload PDF.")
+      setError(err instanceof Error ? err.message : "Failed to upload PDF.")
     } finally {
       setLoading(false)
     }
@@ -98,7 +110,7 @@ export default function FlashcardsPage() {
           setError("No more flashcards available.")
         }
       } catch (err) {
-        setError("Failed to fetch the next flashcard.")
+        setError(err instanceof Error ? err.message : "Failed to fetch the next flashcard.")
       } finally {
         setLoading(false)
       }
@@ -110,8 +122,6 @@ export default function FlashcardsPage() {
       setIsFlipped(false)
       setCurrentCard((prev) => (prev - 1 + demoFlashcards.length) % demoFlashcards.length)
     }
-    // Note: Previous functionality not available for generated flashcards
-    // as they are fetched sequentially from the API
   }
 
   const toggleFlip = () => {
@@ -125,6 +135,9 @@ export default function FlashcardsPage() {
     setSessionId(null)
     setFlashcard(null)
     setError(null)
+    setFile(null)
+    setNumCards(5)
+    setSpecificTopic("")
   }
 
   const switchToPDFUpload = () => {
@@ -146,40 +159,88 @@ export default function FlashcardsPage() {
   const currentFlashcard = getCurrentFlashcard()
 
   return (
-    <div className="min-h-screen overflow-hidden">
+    <div className="min-h-screen overflow-hidden bg-gray-50">
       <div className="container max-w-4xl mx-auto px-4 py-10">
-        <h1 className="text-3xl font-bold text-center mb-10">QuizEasy - Flashcard Generator</h1>
+        <h1 className="text-3xl font-bold text-center mb-10">
+          QuizEasy - Flashcard Generator
+        </h1>
 
         <div className="flex justify-center mb-10 space-x-4">
-          <Button onClick={switchToDemo} variant={isDemoMode ? "default" : "outline"} className="w-40">
+          <Button 
+            onClick={switchToDemo} 
+            variant={isDemoMode ? "default" : "outline"} 
+            className="w-40"
+          >
             Demo Flashcards
           </Button>
-          <Button onClick={switchToPDFUpload} variant={!isDemoMode ? "default" : "outline"} className="w-40">
+          <Button 
+            onClick={switchToPDFUpload} 
+            variant={!isDemoMode ? "default" : "outline"} 
+            className="w-40"
+          >
             Upload PDF
           </Button>
         </div>
 
         {!isDemoMode && (
-          <div className="mb-10 flex flex-col items-center">
-            <Label htmlFor="pdf-upload" className="mb-2">
-              Upload PDF
-            </Label>
-            <Input
-              id="pdf-upload"
-              type="file"
-              accept="application/pdf"
-              onChange={handleFileChange}
-              className="max-w-xs mb-2"
-            />
-            <Button onClick={handleUpload} disabled={loading || !file} className="w-40">
-              {loading ? "Uploading..." : "Generate Flashcards"}
-            </Button>
+          <div className="mb-10">
+            <div className="grid gap-6 max-w-xl mx-auto bg-white p-6 rounded-lg shadow-sm">
+              <div className="space-y-2">
+                <Label htmlFor="pdf-upload">
+                  Upload PDF
+                </Label>
+                <Input
+                  id="pdf-upload"
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleFileChange}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="num-cards">
+                  Number of Flashcards (1-20)
+                </Label>
+                <Input
+                  id="num-cards"
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={numCards}
+                  onChange={(e) => setNumCards(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="specific-topic">
+                  Specific Topic (Optional)
+                </Label>
+                <Input
+                  id="specific-topic"
+                  type="text"
+                  value={specificTopic}
+                  onChange={(e) => setSpecificTopic(e.target.value)}
+                  placeholder="Leave empty for automatic topic detection"
+                  className="w-full"
+                />
+              </div>
+
+              <Button 
+                onClick={handleUpload} 
+                disabled={loading || !file}
+                className="w-full"
+              >
+                {loading ? "Generating Flashcards..." : "Generate Flashcards"}
+              </Button>
+            </div>
           </div>
         )}
 
         {error && (
           <div className="mb-6 text-center">
-            <p className="text-red-500">{error}</p>
+            <p className="text-red-500 bg-red-50 p-3 rounded-lg">{error}</p>
           </div>
         )}
 
@@ -195,8 +256,12 @@ export default function FlashcardsPage() {
                 {/* Front of card */}
                 <div className="absolute inset-0 backface-hidden">
                   <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-                    <p className="text-sm text-muted-foreground mb-4">{currentFlashcard.topic}</p>
-                    <p className="text-xl font-medium">{currentFlashcard.question}</p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {currentFlashcard.topic}
+                    </p>
+                    <p className="text-xl font-medium">
+                      {currentFlashcard.question}
+                    </p>
                   </div>
                 </div>
                 {/* Back of card */}
@@ -210,11 +275,19 @@ export default function FlashcardsPage() {
 
             <div className="mt-6 flex items-center justify-between">
               <div className="flex gap-2">
-                <Button onClick={handlePreviousFlashcard} disabled={loading || !isDemoMode} className="w-40">
+                <Button 
+                  onClick={handlePreviousFlashcard} 
+                  disabled={loading || !isDemoMode} 
+                  className="w-40"
+                >
                   <ChevronLeft className="mr-2 h-4 w-4" />
                   Previous
                 </Button>
-                <Button onClick={handleNextFlashcard} disabled={loading} className="w-40">
+                <Button 
+                  onClick={handleNextFlashcard} 
+                  disabled={loading} 
+                  className="w-40"
+                >
                   Next
                   <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -233,4 +306,3 @@ export default function FlashcardsPage() {
     </div>
   )
 }
-
