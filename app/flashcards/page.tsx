@@ -84,7 +84,7 @@ export default function FlashcardsPage() {
       setIsFlipped(false)
 
       // Fetch remaining flashcards
-      for (let i = 1; i < numCards; i++) {
+      for (let i = 0; i < numCards; i++) {
         const nextCard = await getNextFlashcard(data.session_id)
         if (nextCard.flashcard) {
           setFlashcards((prev) => [...prev, nextCard.flashcard as Flashcard])
