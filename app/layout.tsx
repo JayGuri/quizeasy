@@ -35,14 +35,6 @@ export default function RootLayout({
                 </nav>
                 <div className="flex flex-1 items-center justify-end space-x-4">
                   <ThemeToggle />
-                  <nav className="flex items-center space-x-2">
-                    <Link
-                      href="/quiz-options"
-                      className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-                    >
-                      Get Started
-                    </Link>
-                  </nav>
                 </div>
               </div>
             </header>
@@ -50,7 +42,7 @@ export default function RootLayout({
             <footer className="border-t py-6 md:py-0">
               <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
                 <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-                  Built with accessibility in mind. Contact us at quizzeasyy@gmail.com
+                  Built with accessibility in mind. Contact us at support@quizeasy.com
                 </p>
               </div>
             </footer>

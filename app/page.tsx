@@ -20,24 +20,40 @@ export default function Home() {
               Welcome to our Quizzing Platform, where we transform the way you acquire knowledge. Designed with
               accessibility in mind
             </p>
-            <Link
-              href="/quiz-options"
-              className="bg-primary hover:bg-primary/90 inline-flex h-12 items-center justify-center rounded-full px-8 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              Get Started
-            </Link>
+            <div className="flex space-x-4">
+              <Link
+                href="/flashcards"
+                className="bg-primary hover:bg-primary/90 inline-flex h-12 items-center justify-center rounded-full px-8 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                Generate Flashcards
+              </Link>
+              <Link
+                href="/quiz-options"
+                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground inline-flex h-12 items-center justify-center rounded-full px-8 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                Take a Quiz
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-            {/* Illustration Section */}
-            <section className="w-full relative -mb-20">
+      {/* Illustration Section */}
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
         <div className="container px-4 md:px-6">
-          <img
-            src="/illustration.png"
-            alt="Learning Platform Illustration"
-            className="w-full h-auto object-cover rounded-lg shadow-lg"
-          />
+          <div className="flex flex-col items-center justify-center space-y-4 text-center">
+            <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">Visualize Your Learning Journey</h2>
+            <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+              See how our platform can transform your educational experience
+            </p>
+          </div>
+          <div className="mt-12 flex justify-center">
+            <img
+              src="/illustration.png"
+              alt="Learning Platform Illustration"
+              className="w-full max-w-3xl h-auto object-cover rounded-lg shadow-lg"
+            />
+          </div>
         </div>
       </section>
 
@@ -119,12 +135,20 @@ export default function Home() {
             <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
               Choose from our pre-made quizzes or create your own by uploading a PDF.
             </p>
-            <Link
-              href="/quiz-options"
-              className="bg-primary hover:bg-primary/90 inline-flex h-12 items-center justify-center rounded-full px-8 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              Explore Quizzes
-            </Link>
+            <div className="flex space-x-4">
+              <Link
+                href="/flashcards"
+                className="bg-primary hover:bg-primary/90 inline-flex h-12 items-center justify-center rounded-full px-8 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                Explore Flashcards
+              </Link>
+              <Link
+                href="/quiz-options"
+                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground inline-flex h-12 items-center justify-center rounded-full px-8 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                Explore Quizzes
+              </Link>
+            </div>
           </div>
         </div>
       </section>
