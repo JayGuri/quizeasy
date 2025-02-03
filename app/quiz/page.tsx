@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import { PerformanceAnalysis } from "../../components/performance-analysis"
 import { useTheme } from "next-themes"
+import { CheckCircle, XCircle, Clock } from "lucide-react"
 
 // Sample questions about photosynthesis
 const questions = [
@@ -52,8 +53,9 @@ export default function QuizPage() {
   const [answers, setAnswers] = useState<number[]>([])
   const [showResults, setShowResults] = useState(false)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
-  const [startTime, setStartTime] = useState<number | null>(null)
+  const [startTime, setStartTime] = useState<number>(Date.now())
   const [endTime, setEndTime] = useState<number | null>(null)
+  const [timePerQuestion, setTimePerQuestion] = useState<number[]>([])
   const { theme } = useTheme()
 
   useEffect(() => {
@@ -66,12 +68,16 @@ export default function QuizPage() {
 
   const handleNext = () => {
     if (selectedAnswer !== null) {
+      const currentTime = Date.now()
+      const timeSpent = (currentTime - startTime) / 1000
+      setTimePerQuestion([...timePerQuestion, timeSpent])
+
       setAnswers([...answers, selectedAnswer])
       setSelectedAnswer(null)
       if (currentQuestion < questions.length - 1) {
         setCurrentQuestion(currentQuestion + 1)
       } else {
-        setEndTime(Date.now())
+        setEndTime(currentTime)
         setShowResults(true)
       }
     }
@@ -81,6 +87,7 @@ export default function QuizPage() {
     if (currentQuestion > 0) {
       setCurrentQuestion(currentQuestion - 1)
       setAnswers(answers.slice(0, -1))
+      setTimePerQuestion(timePerQuestion.slice(0, -1))
       setSelectedAnswer(null)
     }
   }
@@ -102,7 +109,7 @@ export default function QuizPage() {
       { name: "Incorrect", value: incorrectAnswers },
     ]
     const COLORS = ["hsl(var(--primary))", theme === "dark" ? "hsl(var(--background))" : "hsl(var(--foreground))"]
-    const timeSpent = endTime && startTime ? (endTime - startTime) / 1000 : 0
+    const totalTimeSpent = timePerQuestion.reduce((a, b) => a + b, 0)
 
     const CustomTooltip = ({ active, payload }: any) => {
       if (active && payload && payload.length) {
@@ -146,14 +153,32 @@ export default function QuizPage() {
                       answers[index] === q.correct ? "bg-primary/10 border-primary" : "bg-muted/50 border-muted"
                     }`}
                   >
-                    <p className="font-medium">{q.question}</p>
-                    <p className="text-sm text-muted-foreground">Your answer: {q.options[answers[index]]}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        {answers[index] === q.correct ? (
+                          <CheckCircle className="mr-2 h-5 w-5 text-green-500" />
+                        ) : (
+                          <XCircle className="mr-2 h-5 w-5 text-red-500" />
+                        )}
+                        <p className="font-medium">{q.question}</p>
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="mr-1 h-4 w-4 text-blue-500" />
+                        <span className="text-sm text-muted-foreground">{timePerQuestion[index].toFixed(1)}s</span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">Your answer: {q.options[answers[index]]}</p>
                     <p className="text-sm text-muted-foreground">Correct answer: {q.options[q.correct]}</p>
                   </div>
                 ))}
               </div>
             </div>
-            <PerformanceAnalysis score={score} totalQuestions={questions.length} timeSpent={timeSpent} />
+            <PerformanceAnalysis
+              score={score}
+              totalQuestions={questions.length}
+              timeSpent={totalTimeSpent}
+              timePerQuestion={timePerQuestion}
+            />
           </CardContent>
         </Card>
       </div>
