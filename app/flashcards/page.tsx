@@ -94,6 +94,9 @@ export default function FlashcardsPage() {
         setError("No flashcards were generated. Please try again with a different PDF or topic.")
       } else if (allFlashcards.length < numCards) {
         console.warn(`Only ${allFlashcards.length} flashcards were generated instead of the requested ${numCards}`)
+        setError(
+          `Generated ${allFlashcards.length} flashcards. This might be due to limited content in the PDF or server constraints.`,
+        )
       }
     } catch (err) {
       console.error("Error in handleUpload:", err)
@@ -227,7 +230,7 @@ export default function FlashcardsPage() {
 
         {error && (
           <div className="mb-6 text-center">
-            <p className="text-red-500 bg-red-50 p-3 rounded-lg">{error}</p>
+            <p className="text-yellow-700 bg-yellow-100 p-3 rounded-lg">{error}</p>
           </div>
         )}
 
