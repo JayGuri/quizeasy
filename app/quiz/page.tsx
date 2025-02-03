@@ -1,139 +1,202 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { Input } from "../../components/ui/input"
-import { Label } from "../../components/ui/label"
-import { RadioGroup, RadioGroupItem } from "../../components/ui/radio-group"
-import { LoadingSpinner } from "../../components/loading-spinner"
-import { generateContent } from "../../services/api"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
+import { PerformanceAnalysis } from "../../components/performance-analysis"
+import { useTheme } from "next-themes"
 
-export default function QuizOptionsPage() {
-  const [file, setFile] = useState<File | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [numItems, setNumItems] = useState(10)
-  const [topic, setTopic] = useState("")
-  const [mode, setMode] = useState<"flashcard" | "quiz">("quiz")
-  const router = useRouter()
+// Sample questions about photosynthesis
+const questions = [
+  {
+    id: 1,
+    question: "What is the primary function of photosynthesis?",
+    options: [
+      "Converting light energy to chemical energy",
+      "Breaking down glucose",
+      "Cellular respiration",
+      "Nitrogen fixation",
+    ],
+    correct: 0,
+  },
+  {
+    id: 2,
+    question: "Which organelle is responsible for photosynthesis in plants?",
+    options: ["Mitochondria", "Chloroplast", "Nucleus", "Golgi apparatus"],
+    correct: 1,
+  },
+  {
+    id: 3,
+    question: "What is the main product of photosynthesis?",
+    options: ["Oxygen", "Carbon dioxide", "Glucose", "Water"],
+    correct: 2,
+  },
+  {
+    id: 4,
+    question: "Which of the following is NOT required for photosynthesis?",
+    options: ["Light", "Water", "Carbon dioxide", "Nitrogen"],
+    correct: 3,
+  },
+  {
+    id: 5,
+    question: "In which part of the plant does photosynthesis primarily occur?",
+    options: ["Roots", "Stems", "Leaves", "Flowers"],
+    correct: 2,
+  },
+]
 
-  // Handle file selection
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0])
-    }
+export default function QuizPage() {
+  const [currentQuestion, setCurrentQuestion] = useState(0)
+  const [answers, setAnswers] = useState<number[]>([])
+  const [showResults, setShowResults] = useState(false)
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
+  const [startTime, setStartTime] = useState<number | null>(null)
+  const [endTime, setEndTime] = useState<number | null>(null)
+  const { theme } = useTheme()
+
+  useEffect(() => {
+    setStartTime(Date.now())
+  }, [])
+
+  const handleAnswer = (answerIndex: number) => {
+    setSelectedAnswer(answerIndex)
   }
 
-  // Handle form submission for custom content generation
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (file) {
-      setIsLoading(true)
-      try {
-        const data = await generateContent(file, mode, numItems, topic)
-        // Store the received data in localStorage
-        localStorage.setItem("generatedContent", JSON.stringify(data))
-        localStorage.setItem("contentMode", "custom") // Set mode to custom
-        router.push(mode === "quiz" ? "/quiz" : "/flashcards")
-      } catch (error) {
-        console.error("Error generating content:", error)
-        // Handle error (e.g., show error message to user)
-      } finally {
-        setIsLoading(false)
+  const handleNext = () => {
+    if (selectedAnswer !== null) {
+      setAnswers([...answers, selectedAnswer])
+      setSelectedAnswer(null)
+      if (currentQuestion < questions.length - 1) {
+        setCurrentQuestion(currentQuestion + 1)
+      } else {
+        setEndTime(Date.now())
+        setShowResults(true)
       }
     }
   }
 
-  // Handle click for demo content
-  const handleDemoClick = (demoMode: "quiz" | "flashcard") => {
-    localStorage.setItem("contentMode", "demo") // Set mode to demo
-    router.push(demoMode === "quiz" ? "/quiz" : "/flashcards")
+  const handlePrevious = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1)
+      setAnswers(answers.slice(0, -1))
+      setSelectedAnswer(null)
+    }
   }
 
-  return (
-    <div className="container mx-auto py-10">
-      <h1 className="text-4xl md:text-5xl font-extrabold text-center mb-10 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80">
-        Choose Your Learning Experience
-      </h1>
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Demo Content Card */}
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Try a Demo</CardTitle>
-            <CardDescription>Experience our format with a sample on Photosynthesis</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>This contains information about the process of photosynthesis in plants.</p>
-          </CardContent>
-          <CardFooter className="flex gap-4">
-            <Button onClick={() => handleDemoClick("quiz")}>Start Demo Quiz</Button>
-            <Button variant="outline" onClick={() => handleDemoClick("flashcard")}>
-              View Demo Flashcards
-            </Button>
-          </CardFooter>
-        </Card>
+  const calculateScore = () => {
+    let correct = 0
+    answers.forEach((answer, index) => {
+      if (answer === questions[index].correct) correct++
+    })
+    return correct
+  }
 
-        {/* Custom Content Card */}
-        <Card className="w-full">
+  if (showResults) {
+    const score = calculateScore()
+    const correctAnswers = score
+    const incorrectAnswers = questions.length - score
+    const data = [
+      { name: "Correct", value: correctAnswers },
+      { name: "Incorrect", value: incorrectAnswers },
+    ]
+    const COLORS = ["hsl(var(--primary))", theme === "dark" ? "hsl(var(--background))" : "hsl(var(--foreground))"]
+    const timeSpent = endTime && startTime ? (endTime - startTime) / 1000 : 0
+
+    const CustomTooltip = ({ active, payload }: any) => {
+      if (active && payload && payload.length) {
+        const data = payload[0].payload
+        return (
+          <div className="bg-background p-2 border rounded shadow">
+            <p className="font-semibold">{`${data.name}: ${data.value}`}</p>
+            <p>{`${((data.value / questions.length) * 100).toFixed(1)}%`}</p>
+          </div>
+        )
+      }
+      return null
+    }
+
+    return (
+      <div className="container max-w-4xl py-12">
+        <Card>
           <CardHeader>
-            <CardTitle>Upload Your Own Content</CardTitle>
-            <CardDescription>Generate a quiz or flashcards from your PDF</CardDescription>
+            <CardTitle>Quiz Results</CardTitle>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                {/* File upload input */}
-                <div>
-                  <Label htmlFor="pdf-upload">Upload PDF</Label>
-                  <Input id="pdf-upload" type="file" accept=".pdf" className="mt-2" onChange={handleFileChange} />
-                </div>
-                {/* Mode selection (Quiz or Flashcards) */}
-                <RadioGroup defaultValue="quiz" onValueChange={(value) => setMode(value as "quiz" | "flashcard")}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="quiz" id="quiz" />
-                    <Label htmlFor="quiz">Quiz</Label>
+          <CardContent className="space-y-6">
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={data} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value">
+                    {data.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="hsl(var(--border))" />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-2xl font-bold">Your Score: {((score / questions.length) * 100).toFixed(1)}%</h3>
+              <div className="space-y-2">
+                {questions.map((q, index) => (
+                  <div
+                    key={q.id}
+                    className={`p-4 rounded-lg ${
+                      answers[index] === q.correct ? "bg-primary/10 border-primary" : "bg-muted/50 border-muted"
+                    }`}
+                  >
+                    <p className="font-medium">{q.question}</p>
+                    <p className="text-sm text-muted-foreground">Your answer: {q.options[answers[index]]}</p>
+                    <p className="text-sm text-muted-foreground">Correct answer: {q.options[q.correct]}</p>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="flashcard" id="flashcard" />
-                    <Label htmlFor="flashcard">Flashcards</Label>
-                  </div>
-                </RadioGroup>
-                {/* Number of items input */}
-                <div>
-                  <Label htmlFor="num-items">{mode === "quiz" ? "Number of Questions" : "Number of Flashcards"}</Label>
-                  <Input
-                    id="num-items"
-                    type="number"
-                    min="1"
-                    max="50"
-                    value={numItems}
-                    onChange={(e) => setNumItems(Number(e.target.value))}
-                    className="mt-2"
-                  />
-                </div>
-                {/* Optional topic input */}
-                <div>
-                  <Label htmlFor="topic">Specific Topic (optional)</Label>
-                  <Input
-                    id="topic"
-                    type="text"
-                    value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
-                    placeholder="Enter a specific topic"
-                    className="mt-2"
-                  />
-                </div>
-                {/* Submit button */}
-                <Button type="submit" className="w-full" disabled={!file || isLoading}>
-                  {isLoading ? "Processing..." : `Generate ${mode === "quiz" ? "Quiz" : "Flashcards"}`}
-                </Button>
+                ))}
               </div>
-            </form>
+            </div>
+            <PerformanceAnalysis score={score} totalQuestions={questions.length} timeSpent={timeSpent} />
           </CardContent>
         </Card>
       </div>
-      {isLoading && <LoadingSpinner />}
+    )
+  }
+
+  return (
+    <div className="container max-w-4xl py-12">
+      <Card>
+        <CardHeader>
+          <CardTitle>Photosynthesis Quiz</CardTitle>
+          <Progress value={((currentQuestion + 1) / questions.length) * 100} />
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <h2 className="text-xl font-medium">
+              Question {currentQuestion + 1} of {questions.length}
+            </h2>
+            <p>{questions[currentQuestion].question}</p>
+            <div className="grid gap-2">
+              {questions[currentQuestion].options.map((option, index) => (
+                <Button
+                  key={index}
+                  variant={selectedAnswer === index ? "default" : "outline"}
+                  className="justify-start"
+                  onClick={() => handleAnswer(index)}
+                >
+                  {option}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <div className="flex justify-between">
+            <Button variant="outline" onClick={handlePrevious} disabled={currentQuestion === 0}>
+              Previous
+            </Button>
+            <Button onClick={handleNext} disabled={selectedAnswer === null}>
+              {currentQuestion === questions.length - 1 ? "Finish" : "Next"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
+
