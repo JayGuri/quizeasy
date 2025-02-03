@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react"
-import { uploadPDF, getNextFlashcard, type Flashcard } from "../../lib/api"
+import { uploadPDF, getAllFlashcards, type Flashcard } from "../../lib/api"
 import { Chatbot } from "../../components/chatbot"
 
 const demoFlashcards = [
@@ -49,7 +49,7 @@ export default function FlashcardsPage() {
   const [numCards, setNumCards] = useState<number>(5)
   const [specificTopic, setSpecificTopic] = useState<string>("")
   const [sessionId, setSessionId] = useState<string | null>(null)
-  const [flashcards, setFlashcards] = useState<Flashcard[]>([])
+  const [flashcards, setFlashcards] = useState<(Flashcard & { topic: string })[]>([])
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [isChatOpen, setIsChatOpen] = useState(false)
@@ -76,24 +76,28 @@ export default function FlashcardsPage() {
     setError(null)
 
     try {
+      console.log("Starting PDF upload...")
       const data = await uploadPDF(file, numCards, specificTopic || undefined)
+      console.log("PDF upload successful. Session ID:", data.session_id)
       setSessionId(data.session_id)
-      setFlashcards([data.flashcard as Flashcard])
+      setFlashcards([])
       setCurrentCard(0)
       setIsDemoMode(false)
       setIsFlipped(false)
 
-      // Fetch remaining flashcards
-      for (let i = 0; i < numCards; i++) {
-        const nextCard = await getNextFlashcard(data.session_id)
-        if (nextCard.flashcard) {
-          setFlashcards((prev) => [...prev, nextCard.flashcard as Flashcard])
-        } else {
-          break
-        }
+      console.log("Fetching all flashcards...")
+      const allFlashcards = await getAllFlashcards(data.session_id)
+      console.log(`Fetched ${allFlashcards.length} flashcards`)
+      setFlashcards(allFlashcards)
+
+      if (allFlashcards.length === 0) {
+        setError("No flashcards were generated. Please try again with a different PDF or topic.")
+      } else if (allFlashcards.length < numCards) {
+        console.warn(`Only ${allFlashcards.length} flashcards were generated instead of the requested ${numCards}`)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to upload PDF.")
+      console.error("Error in handleUpload:", err)
+      setError(err instanceof Error ? err.message : "Failed to upload PDF or generate flashcards.")
     } finally {
       setLoading(false)
     }
@@ -150,6 +154,12 @@ export default function FlashcardsPage() {
   }
 
   const currentFlashcard = getCurrentFlashcard()
+
+  useEffect(() => {
+    if (currentFlashcard) {
+      console.log("Current flashcard:", currentFlashcard)
+    }
+  }, [currentFlashcard])
 
   const toggleChat = () => {
     setIsChatOpen(!isChatOpen)
@@ -221,6 +231,13 @@ export default function FlashcardsPage() {
           </div>
         )}
 
+        {!isDemoMode && flashcards.length === 0 && !loading && !error && (
+          <div className="text-center mt-6">
+            <p className="text-lg font-semibold">No flashcards available.</p>
+            <p className="text-muted-foreground">Try uploading a different PDF or changing the topic.</p>
+          </div>
+        )}
+
         {currentFlashcard && (
           <div className="relative mb-6">
             <Card className="w-full aspect-[3/1.5] perspective">
@@ -233,7 +250,7 @@ export default function FlashcardsPage() {
                 {/* Front of card */}
                 <div className="absolute inset-0 backface-hidden">
                   <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-                    <p className="text-sm text-muted-foreground mb-4">{currentFlashcard.topic}</p>
+                    <p className="text-sm text-muted-foreground mb-4">{currentFlashcard.topic || "General"}</p>
                     <p className="text-xl font-medium">{currentFlashcard.question}</p>
                   </div>
                 </div>

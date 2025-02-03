@@ -64,4 +64,3 @@ export function PerformanceAnalysis({ score, totalQuestions, timeSpent, question
     </Card>
   )
 }
-

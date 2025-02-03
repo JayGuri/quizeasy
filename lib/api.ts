@@ -54,6 +54,11 @@ export const getNextFlashcard = async (sessionId: string): Promise<NextFlashcard
       }),
     })
 
+    if (response.status === 404) {
+      console.log("No more flashcards available")
+      return { session_id: sessionId, flashcard: null }
+    }
+
     if (!response.ok) {
       const errorData = await response.json()
       throw new Error(errorData.detail || "Failed to fetch next flashcard")
@@ -68,25 +73,40 @@ export const getNextFlashcard = async (sessionId: string): Promise<NextFlashcard
   }
 }
 
-// New function to get all flashcards for a session
 export const getAllFlashcards = async (sessionId: string): Promise<Flashcard[]> => {
   const flashcards: Flashcard[] = []
   let hasMore = true
+  let retryCount = 0
+  const maxRetries = 5
+  const retryDelay = 1000 // 1 second
 
-  try {
-    while (hasMore) {
+  console.log("Starting to fetch all flashcards for session:", sessionId)
+
+  while (hasMore && retryCount < maxRetries) {
+    try {
       const response = await getNextFlashcard(sessionId)
       if (response.flashcard) {
         flashcards.push(response.flashcard)
+        console.log(`Fetched flashcard ${flashcards.length}:`, response.flashcard)
+        retryCount = 0 // Reset retry count on successful fetch
       } else {
+        console.log("No more flashcards available")
+        hasMore = false
+      }
+    } catch (error) {
+      console.error(`Error fetching flashcard (attempt ${retryCount + 1}):`, error)
+      retryCount++
+      if (retryCount < maxRetries) {
+        console.log(`Retrying in ${retryDelay}ms...`)
+        await new Promise((resolve) => setTimeout(resolve, retryDelay))
+      } else {
+        console.error("Max retries reached. Stopping flashcard fetch.")
         hasMore = false
       }
     }
-    console.log("All flashcards:", flashcards) // Log all flashcards for debugging
-    return flashcards
-  } catch (error) {
-    console.error("Error fetching all flashcards:", error)
-    throw error
   }
+
+  console.log(`Finished fetching flashcards. Total: ${flashcards.length}`)
+  return flashcards
 }
 

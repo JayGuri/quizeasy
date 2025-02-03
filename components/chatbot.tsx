@@ -99,4 +99,3 @@ export function Chatbot({ sessionId }: ChatbotProps) {
     </Card>
   )
 }
-

@@ -1,139 +1,292 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
-import { RadioGroup, RadioGroupItem } from "../../components/ui/radio-group"
-import { LoadingSpinner } from "../../components/loading-spinner"
-import { generateContent } from "../../services/api"
+import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react"
+import { uploadPDF, getAllFlashcards, type Flashcard } from "../../lib/api"
+import { Chatbot } from "../../components/chatbot"
 
-export default function QuizOptionsPage() {
+const demoFlashcards = [
+  {
+    topic: "Photosynthesis",
+    question: "What is photosynthesis?",
+    answer:
+      "Photosynthesis is the process by which plants use sunlight, water and carbon dioxide to produce oxygen and energy in the form of sugar.",
+  },
+  {
+    topic: "Photosynthesis Components",
+    question: "What are the main components needed for photosynthesis?",
+    answer: "The main components needed for photosynthesis are: sunlight, water, carbon dioxide, and chlorophyll.",
+  },
+  {
+    topic: "Photosynthesis Location",
+    question: "Where does photosynthesis take place in the plant?",
+    answer:
+      "Photosynthesis primarily takes place in the leaves of plants, specifically in the chloroplasts of plant cells.",
+  },
+  {
+    topic: "Chlorophyll",
+    question: "What is the role of chlorophyll in photosynthesis?",
+    answer:
+      "Chlorophyll is the pigment that gives plants their green color and is responsible for absorbing light energy used in photosynthesis.",
+  },
+  {
+    topic: "Photosynthesis Stages",
+    question: "What are the two main stages of photosynthesis?",
+    answer:
+      "The two main stages of photosynthesis are the light-dependent reactions and the light-independent reactions (Calvin cycle).",
+  },
+]
+
+export default function FlashcardsPage() {
+  const [currentCard, setCurrentCard] = useState(0)
+  const [isFlipped, setIsFlipped] = useState(false)
+  const [isDemoMode, setIsDemoMode] = useState(true)
   const [file, setFile] = useState<File | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [numItems, setNumItems] = useState(10)
-  const [topic, setTopic] = useState("")
-  const [mode, setMode] = useState<"flashcard" | "quiz">("quiz")
-  const router = useRouter()
+  const [numCards, setNumCards] = useState<number>(5)
+  const [specificTopic, setSpecificTopic] = useState<string>("")
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [flashcards, setFlashcards] = useState<(Flashcard & { topic: string })[]>([])
+  const [loading, setLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isChatOpen, setIsChatOpen] = useState(false)
 
-  // Handle file selection
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0])
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      setFile(event.target.files[0])
+      setError(null)
     }
   }
 
-  // Handle form submission for custom content generation
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (file) {
-      setIsLoading(true)
-      try {
-        const data = await generateContent(file, mode, numItems, topic)
-        // Store the received data in localStorage
-        localStorage.setItem("generatedContent", JSON.stringify(data))
-        localStorage.setItem("contentMode", "custom") // Set mode to custom
-        router.push(mode === "quiz" ? "/quiz" : "/flashcards")
-      } catch (error) {
-        console.error("Error generating content:", error)
-        // Handle error (e.g., show error message to user)
-      } finally {
-        setIsLoading(false)
+  const handleUpload = async () => {
+    if (!file) {
+      setError("Please select a PDF file.")
+      return
+    }
+
+    if (numCards < 1 || numCards > 20) {
+      setError("Please enter a number between 1 and 20.")
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const data = await uploadPDF(file, numCards, specificTopic || undefined)
+      setSessionId(data.session_id)
+      setFlashcards([])
+      setCurrentCard(0)
+      setIsDemoMode(false)
+      setIsFlipped(false)
+
+      // Fetch all flashcards
+      const allFlashcards = await getAllFlashcards(data.session_id)
+      setFlashcards(allFlashcards)
+
+      if (allFlashcards.length === 0) {
+        setError("No flashcards were generated. Please try again with a different PDF or topic.")
       }
+    } catch (err) {
+      console.error("Error in handleUpload:", err)
+      setError(err instanceof Error ? err.message : "Failed to upload PDF or generate flashcards.")
+    } finally {
+      setLoading(false)
     }
   }
 
-  // Handle click for demo content
-  const handleDemoClick = (demoMode: "quiz" | "flashcard") => {
-    localStorage.setItem("contentMode", "demo") // Set mode to demo
-    router.push(demoMode === "quiz" ? "/quiz" : "/flashcards")
+  const handleNextFlashcard = () => {
+    setIsFlipped(false)
+    if (isDemoMode) {
+      setCurrentCard((prev) => (prev + 1) % demoFlashcards.length)
+    } else {
+      setCurrentCard((prev) => (prev + 1) % flashcards.length)
+    }
+  }
+
+  const handlePreviousFlashcard = () => {
+    setIsFlipped(false)
+    if (isDemoMode) {
+      setCurrentCard((prev) => (prev - 1 + demoFlashcards.length) % demoFlashcards.length)
+    } else {
+      setCurrentCard((prev) => (prev - 1 + flashcards.length) % flashcards.length)
+    }
+  }
+
+  const toggleFlip = () => {
+    setIsFlipped(!isFlipped)
+  }
+
+  const switchToDemo = () => {
+    setIsDemoMode(true)
+    setCurrentCard(0)
+    setIsFlipped(false)
+    setSessionId(null)
+    setFlashcards([])
+    setError(null)
+    setFile(null)
+    setNumCards(5)
+    setSpecificTopic("")
+  }
+
+  const switchToPDFUpload = () => {
+    setIsDemoMode(false)
+    setCurrentCard(0)
+    setIsFlipped(false)
+    setSessionId(null)
+    setFlashcards([])
+    setError(null)
+  }
+
+  const getCurrentFlashcard = () => {
+    if (isDemoMode) {
+      return demoFlashcards[currentCard]
+    }
+    return flashcards[currentCard]
+  }
+
+  const currentFlashcard = getCurrentFlashcard()
+
+  useEffect(() => {
+    if (currentFlashcard) {
+      console.log("Current flashcard:", currentFlashcard)
+    }
+  }, [currentFlashcard])
+
+  const toggleChat = () => {
+    setIsChatOpen(!isChatOpen)
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <h1 className="text-4xl md:text-5xl font-extrabold text-center mb-10 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80">
-        Choose Your Learning Experience
-      </h1>
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Demo Content Card */}
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Try a Demo</CardTitle>
-            <CardDescription>Experience our format with a sample on Photosynthesis</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>This contains information about the process of photosynthesis in plants.</p>
-          </CardContent>
-          <CardFooter className="flex gap-4">
-            <Button onClick={() => handleDemoClick("quiz")}>Start Demo Quiz</Button>
-            <Button variant="outline" onClick={() => handleDemoClick("flashcard")}>
-              View Demo Flashcards
-            </Button>
-          </CardFooter>
-        </Card>
+    <div className="min-h-screen overflow-hidden bg-gray-50">
+      <div className="container max-w-4xl mx-auto px-4 py-10">
+        <h1 className="text-3xl font-bold text-center mb-10">QuizEasy - Flashcard Generator</h1>
 
-        {/* Custom Content Card */}
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Upload Your Own Content</CardTitle>
-            <CardDescription>Generate a quiz or flashcards from your PDF</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                {/* File upload input */}
-                <div>
-                  <Label htmlFor="pdf-upload">Upload PDF</Label>
-                  <Input id="pdf-upload" type="file" accept=".pdf" className="mt-2" onChange={handleFileChange} />
-                </div>
-                {/* Mode selection (Quiz or Flashcards) */}
-                <RadioGroup defaultValue="quiz" onValueChange={(value) => setMode(value as "quiz" | "flashcard")}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="quiz" id="quiz" />
-                    <Label htmlFor="quiz">Quiz</Label>
+        <div className="flex justify-center mb-10 space-x-4">
+          <Button onClick={switchToDemo} variant={isDemoMode ? "default" : "outline"} className="w-40">
+            Demo Flashcards
+          </Button>
+          <Button onClick={switchToPDFUpload} variant={!isDemoMode ? "default" : "outline"} className="w-40">
+            Upload PDF
+          </Button>
+        </div>
+
+        {!isDemoMode && (
+          <div className="mb-10">
+            <div className="grid gap-6 max-w-xl mx-auto bg-white p-6 rounded-lg shadow-sm">
+              <div className="space-y-2">
+                <Label htmlFor="pdf-upload">Upload PDF</Label>
+                <Input
+                  id="pdf-upload"
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleFileChange}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="num-cards">Number of Flashcards (1-20)</Label>
+                <Input
+                  id="num-cards"
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={numCards}
+                  onChange={(e) => setNumCards(Number(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="specific-topic">Specific Topic (Optional)</Label>
+                <Input
+                  id="specific-topic"
+                  type="text"
+                  value={specificTopic}
+                  onChange={(e) => setSpecificTopic(e.target.value)}
+                  placeholder="Leave empty for automatic topic detection"
+                  className="w-full"
+                />
+              </div>
+
+              <Button onClick={handleUpload} disabled={loading || !file} className="w-full">
+                {loading ? "Generating Flashcards..." : "Generate Flashcards"}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-6 text-center">
+            <p className="text-red-500 bg-red-50 p-3 rounded-lg">{error}</p>
+          </div>
+        )}
+
+        {!isDemoMode && flashcards.length === 0 && !loading && !error && (
+          <div className="text-center mt-6">
+            <p className="text-lg font-semibold">No flashcards available.</p>
+            <p className="text-muted-foreground">Try uploading a different PDF or changing the topic.</p>
+          </div>
+        )}
+
+        {currentFlashcard && (
+          <div className="relative mb-6">
+            <Card className="w-full aspect-[3/1.5] perspective">
+              <CardContent
+                className={`absolute w-full h-full transition-transform duration-500 preserve-3d cursor-pointer ${
+                  isFlipped ? "rotate-y-180" : ""
+                }`}
+                onClick={toggleFlip}
+              >
+                {/* Front of card */}
+                <div className="absolute inset-0 backface-hidden">
+                  <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+                    <p className="text-sm text-muted-foreground mb-4">{currentFlashcard.topic || "General"}</p>
+                    <p className="text-xl font-medium">{currentFlashcard.question}</p>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="flashcard" id="flashcard" />
-                    <Label htmlFor="flashcard">Flashcards</Label>
+                </div>
+                {/* Back of card */}
+                <div className="absolute inset-0 backface-hidden rotate-y-180">
+                  <div className="flex items-center justify-center h-full p-6 text-center bg-primary text-primary-foreground rounded-lg">
+                    <p className="text-lg">{currentFlashcard.answer}</p>
                   </div>
-                </RadioGroup>
-                {/* Number of items input */}
-                <div>
-                  <Label htmlFor="num-items">{mode === "quiz" ? "Number of Questions" : "Number of Flashcards"}</Label>
-                  <Input
-                    id="num-items"
-                    type="number"
-                    min="1"
-                    max="50"
-                    value={numItems}
-                    onChange={(e) => setNumItems(Number(e.target.value))}
-                    className="mt-2"
-                  />
                 </div>
-                {/* Optional topic input */}
-                <div>
-                  <Label htmlFor="topic">Specific Topic (optional)</Label>
-                  <Input
-                    id="topic"
-                    type="text"
-                    value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
-                    placeholder="Enter a specific topic"
-                    className="mt-2"
-                  />
-                </div>
-                {/* Submit button */}
-                <Button type="submit" className="w-full" disabled={!file || isLoading}>
-                  {isLoading ? "Processing..." : `Generate ${mode === "quiz" ? "Quiz" : "Flashcards"}`}
+              </CardContent>
+            </Card>
+
+            <div className="mt-6 flex items-center justify-between">
+              <div className="flex gap-2">
+                <Button onClick={handlePreviousFlashcard} disabled={loading} className="w-40">
+                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  Previous
+                </Button>
+                <Button onClick={handleNextFlashcard} disabled={loading} className="w-40">
+                  Next
+                  <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
-            </form>
-          </CardContent>
-        </Card>
+              <p className="text-sm text-muted-foreground">
+                {isDemoMode
+                  ? `Card ${currentCard + 1} of ${demoFlashcards.length}`
+                  : `Card ${currentCard + 1} of ${flashcards.length}`}
+              </p>
+            </div>
+
+            {!isDemoMode && (
+              <Button onClick={toggleChat} className="mt-4 w-full" variant="outline">
+                <MessageCircle className="mr-2 h-4 w-4" />
+                {isChatOpen ? "Close Chat" : "Open Chat"}
+              </Button>
+            )}
+          </div>
+        )}
+
+        {isChatOpen && !isDemoMode && sessionId && <Chatbot sessionId={sessionId} />}
       </div>
-      {isLoading && <LoadingSpinner />}
     </div>
   )
 }

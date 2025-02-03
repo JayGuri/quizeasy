@@ -17,4 +17,3 @@ export function ChatMessage({ role, content }: ChatMessageProps) {
     </div>
   )
 }
-
